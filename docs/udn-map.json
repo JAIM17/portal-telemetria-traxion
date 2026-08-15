@@ -1,0 +1,371 @@
+{
+  "_doc": "Mapa grupo API → UDN. Editable desde el portal (rol super). origen: nombre=derivado del texto, confirmado_cliente=dicho por el cliente, sin_pista=pendiente de asignar, no_operativo=flota no asignada.",
+  "udn_oficiales": [
+    "Guadalajara",
+    "Colima",
+    "Lázaro Cárdenas"
+  ],
+  "actualizado": "2026-07-24",
+  "grupos": {
+    "ARCELORMITTAL MEXICO": {
+      "udn": "Lázaro Cárdenas",
+      "unidades": 53,
+      "origen": "inferido_operador"
+    },
+    "ARCELORMITTAL TRUCHAS": {
+      "udn": "Lázaro Cárdenas",
+      "unidades": 8,
+      "origen": "nombre"
+    },
+    "AXIONLOG": {
+      "udn": "Guadalajara",
+      "unidades": 2,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 2
+        },
+        "confianza": "100%"
+      }
+    },
+    "BIMBO": {
+      "udn": "Guadalajara",
+      "unidades": 2,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 2
+        },
+        "confianza": "100%"
+      }
+    },
+    "CABRERA LLAMAS GDL": {
+      "udn": "Guadalajara",
+      "unidades": 2,
+      "origen": "nombre"
+    },
+    "CAPACITACION": {
+      "udn": "Guadalajara",
+      "unidades": 9,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 8,
+          "Lázaro Cárdenas": 1
+        },
+        "confianza": "89%"
+      }
+    },
+    "COL TERNIUM": {
+      "udn": "Colima",
+      "unidades": 10,
+      "origen": "nombre"
+    },
+    "COLEGIO AMERICANO": {
+      "udn": "Guadalajara",
+      "unidades": 2,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 2
+        },
+        "confianza": "100%"
+      }
+    },
+    "CUPRUM GDL": {
+      "udn": "Guadalajara",
+      "unidades": 6,
+      "origen": "nombre"
+    },
+    "DIAGEO GDL": {
+      "udn": "Guadalajara",
+      "unidades": 7,
+      "origen": "nombre"
+    },
+    "DISPONIBLE": {
+      "udn": "Sin asignar",
+      "unidades": 48,
+      "origen": "no_operativo"
+    },
+    "DON JULIO GDL": {
+      "udn": "Guadalajara",
+      "unidades": 1,
+      "origen": "nombre"
+    },
+    "DON JULIO TEPIC": {
+      "udn": "Guadalajara",
+      "unidades": 8,
+      "origen": "inferido_operador"
+    },
+    "ESCUELA": {
+      "udn": "Colima",
+      "unidades": 1,
+      "origen": "confirmado_cliente"
+    },
+    "FERTINAL (DINAMICA DEL BALSAS)": {
+      "udn": "Lázaro Cárdenas",
+      "unidades": 26,
+      "origen": "nombre"
+    },
+    "FOUR SEASON": {
+      "udn": "Colima",
+      "unidades": 9,
+      "origen": "confirmado_cliente"
+    },
+    "FOXCONN": {
+      "udn": "Guadalajara",
+      "unidades": 3,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 3
+        },
+        "confianza": "100%"
+      }
+    },
+    "FUNDIAC": {
+      "udn": "Guadalajara",
+      "unidades": 3,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 3
+        },
+        "confianza": "100%"
+      }
+    },
+    "GUARDIA": {
+      "udn": "Sin asignar",
+      "unidades": 1,
+      "origen": "no_operativo"
+    },
+    "HELLA": {
+      "udn": "Guadalajara",
+      "unidades": 40,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 39
+        },
+        "confianza": "100%"
+      }
+    },
+    "HERSHEY'S": {
+      "udn": "Guadalajara",
+      "unidades": 19,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 19
+        },
+        "confianza": "100%"
+      }
+    },
+    "HOLCIM COLIMA": {
+      "udn": "Colima",
+      "unidades": 3,
+      "origen": "nombre"
+    },
+    "HOSPITAL PUERTA DE HIERRO": {
+      "udn": "Guadalajara",
+      "unidades": 4,
+      "origen": "nombre"
+    },
+    "INGRASIS": {
+      "udn": "Guadalajara",
+      "unidades": 136,
+      "origen": "confirmado_cliente"
+    },
+    "JLL": {
+      "udn": "Guadalajara",
+      "unidades": 3,
+      "origen": "inferido_operador"
+    },
+    "LIPU COLIMA": {
+      "udn": "Colima",
+      "unidades": 7,
+      "origen": "nombre"
+    },
+    "LIPU GDL": {
+      "udn": "Guadalajara",
+      "unidades": 61,
+      "origen": "nombre"
+    },
+    "LIPU L CARDENAS": {
+      "udn": "Lázaro Cárdenas",
+      "unidades": 9,
+      "origen": "nombre"
+    },
+    "M2 RESCATE": {
+      "udn": "Guadalajara",
+      "unidades": 2,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 2
+        },
+        "confianza": "100%"
+      }
+    },
+    "MABE GDL": {
+      "udn": "Guadalajara",
+      "unidades": 6,
+      "origen": "nombre"
+    },
+    "MASECA": {
+      "udn": "Guadalajara",
+      "unidades": 3,
+      "origen": "inferido_operador"
+    },
+    "MOLEX": {
+      "udn": "Guadalajara",
+      "unidades": 19,
+      "origen": "inferido_operador"
+    },
+    "NO FUNCIONA": {
+      "udn": "Sin asignar",
+      "unidades": 1,
+      "origen": "no_operativo"
+    },
+    "NO FUNCIONAN": {
+      "udn": "Sin asignar",
+      "unidades": 39,
+      "origen": "no_operativo"
+    },
+    "NO FUNCIONAN.": {
+      "udn": "Sin asignar",
+      "unidades": 58,
+      "origen": "no_operativo"
+    },
+    "PAQUETEXPRESS GDL": {
+      "udn": "Guadalajara",
+      "unidades": 14,
+      "origen": "nombre"
+    },
+    "PEPSICO MIXING": {
+      "udn": "Guadalajara",
+      "unidades": 7,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 7
+        },
+        "confianza": "100%"
+      }
+    },
+    "PEPSICO MOCTEZUMA": {
+      "udn": "Guadalajara",
+      "unidades": 15,
+      "origen": "inferido_operador"
+    },
+    "PEÑAFIEL GDL": {
+      "udn": "Guadalajara",
+      "unidades": 3,
+      "origen": "nombre"
+    },
+    "PISA": {
+      "udn": "Guadalajara",
+      "unidades": 54,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 54
+        },
+        "confianza": "100%"
+      }
+    },
+    "RHI MAGNESITA": {
+      "udn": "Lázaro Cárdenas",
+      "unidades": 1,
+      "origen": "inferido_operador"
+    },
+    "SANMINA 16": {
+      "udn": "Guadalajara",
+      "unidades": 28,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 28
+        },
+        "confianza": "100%"
+      }
+    },
+    "SANMINA 29": {
+      "udn": "Guadalajara",
+      "unidades": 30,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 29
+        },
+        "confianza": "100%"
+      }
+    },
+    "SANMINA FORANEA": {
+      "udn": "Guadalajara",
+      "unidades": 36,
+      "origen": "inferido_operador"
+    },
+    "SANMINA TLAJOMULCO": {
+      "udn": "Guadalajara",
+      "unidades": 34,
+      "origen": "nombre"
+    },
+    "SIGMA ALIMENTOS": {
+      "udn": "Guadalajara",
+      "unidades": 6,
+      "origen": "geolocalizado",
+      "geo": {
+        "votos": {
+          "Guadalajara": 6
+        },
+        "confianza": "100%"
+      }
+    },
+    "SORIANA GDL": {
+      "udn": "Guadalajara",
+      "unidades": 13,
+      "origen": "nombre"
+    },
+    "Sindicato Fertinal": {
+      "udn": "Lázaro Cárdenas",
+      "unidades": 1,
+      "origen": "nombre"
+    },
+    "TENIENVASES": {
+      "udn": "Sin asignar",
+      "unidades": 1,
+      "origen": "sin_pista"
+    },
+    "UTILITARIO": {
+      "udn": "Sin asignar",
+      "unidades": 2,
+      "origen": "no_operativo"
+    },
+    "UTILITARIO : LIPU L CARDENAS": {
+      "udn": "Lázaro Cárdenas",
+      "unidades": 1,
+      "origen": "nombre"
+    },
+    "YAZAKI COLIMA": {
+      "udn": "Colima",
+      "unidades": 32,
+      "origen": "nombre"
+    },
+    "YAZAKI TECOMAN": {
+      "udn": "Colima",
+      "unidades": 10,
+      "origen": "nombre"
+    },
+    "ZF": {
+      "udn": "Guadalajara",
+      "unidades": 33,
+      "origen": "inferido_operador"
+    },
+    "ZOLTEK GDL": {
+      "udn": "Guadalajara",
+      "unidades": 13,
+      "origen": "nombre"
+    }
+  }
+}

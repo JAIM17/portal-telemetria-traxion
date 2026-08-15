@@ -1,0 +1,46 @@
+# Despliegue en Netlify — sitio estático + funciones REST Traffilog (api.traffilog.mx)
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Recolector acumulativo (Blobs). El horario también está en export const config del archivo.
+[functions."traffilog-cron"]
+  schedule = "13 * * * *"
+
+# Conexión en vivo: la función se loguea server-side (REST) y sirve el cache de Blobs.
+[[redirects]]
+  from = "/api/traffilog"
+  to = "/.netlify/functions/traffilog"
+  status = 200
+
+[[redirects]]
+  from = "/api/data"
+  to = "/.netlify/functions/data"
+  status = 200
+
+# Monitor vivo: la Mac empuja (POST con secreto), el portal lee (GET).
+[[redirects]]
+  from = "/api/monitor-alertas"
+  to = "/.netlify/functions/monitor-alertas"
+  status = 200
+
+# Autenticación del portal (ver docs/AUTH.md).
+# /api/auth/login · /api/auth/logout · /api/auth/me · /api/auth/usuarios
+[[redirects]]
+  from = "/api/auth/:accion"
+  to = "/.netlify/functions/auth-:accion"
+  status = 200
+
+# Las respuestas de auth nunca deben cachearse en CDN ni en el navegador.
+[[headers]]
+  for = "/api/auth/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/data.json"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"

@@ -1,0 +1,309 @@
+/* ============================================================================
+ * MÓDULO — COMBUSTIBLE / CAÍDAS DE NIVEL · lenguaje visual DASHTRAX
+ * Tokens globales del portal. Semáforo --sem-*; lime SOLO marca, nunca "bien".
+ * ========================================================================== */
+
+.cb2-mod{
+  --cb2-mono: var(--mono, 'IBM Plex Mono', ui-monospace, Menlo, monospace);
+  --cb2-cond: var(--cond, 'Roboto Condensed', 'Arial Narrow', sans-serif);
+  display:flex; flex-direction:column; gap:var(--gap-bloque,38px);
+  color:var(--txt);
+  animation:cb2-in .38s var(--ease-out, cubic-bezier(.22,1,.36,1));
+}
+@keyframes cb2-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.cb2-mod{animation:none}}
+
+.cb2-ic{display:inline-grid;place-items:center;width:20px;height:20px;flex:0 0 20px;--ic-accent:var(--lime-dark)}
+.cb2-ic svg{width:19px;height:19px;overflow:visible}
+.cb2-mod .dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cb2-mod .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+:root[data-theme="dark"] .cb2-ic{--ic-accent:var(--lime)}
+
+/* ============================== CABECERA ================================= */
+.cb2-head{border-bottom:1px solid var(--line);padding-bottom:11px}
+.cb2-title{font-family:var(--cb2-cond);font-weight:900;font-size:22px;letter-spacing:.4px;
+  text-transform:uppercase;margin:0;line-height:1.05}
+.cb2-title em{color:var(--muted);font-style:normal;font-weight:700}
+.cb2-sub{font-family:var(--cb2-mono);font-size:10px;letter-spacing:.55px;text-transform:uppercase;
+  color:var(--faint);margin-top:6px}
+
+/* ================================ KPIs =================================== */
+.cb2-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:var(--gap-card,30px);align-items:stretch}
+.cb2-kpi{background:var(--tile-bg,var(--panel));border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--pad-kpi,20px 22px);box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0;
+  transition:transform .18s var(--ease-out),box-shadow .18s,border-color .18s}
+.cb2-kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.cb2-kpi-top{display:flex;align-items:flex-start;gap:7px;min-height:30px}
+.cb2-kpi .l{font-family:var(--cb2-mono);font-size:9px;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--tile-muted,var(--muted));line-height:1.35;padding-top:2px}
+.cb2-kpi .v{font-family:var(--cb2-mono);font-weight:700;font-size:27px;letter-spacing:-1px;
+  font-variant-numeric:tabular-nums;line-height:1;margin-top:8px;color:var(--tile-txt,var(--txt))}
+.cb2-kpi .v small{font-size:13px;letter-spacing:0;color:var(--tile-faint,var(--faint));font-weight:500}
+.cb2-kpi .s{font-family:var(--cb2-mono);font-size:9.5px;color:var(--tile-faint,var(--faint));margin-top:6px;line-height:1.35}
+.cb2-kpi.bad .v{color:var(--tile-bad,var(--bad))}
+.cb2-kpi.high .v{color:var(--tile-high,var(--high))}
+.cb2-kpi.warn .v{color:var(--tile-warn,var(--warn))}
+.cb2-kpi.ok .v{color:var(--tile-ok,var(--ok))}
+.cb2-kpi.bad .cb2-ic{--ic-accent:var(--sem-bad)}
+.cb2-kpi.high .cb2-ic{--ic-accent:var(--sem-high)}
+.cb2-kpi.warn .cb2-ic{--ic-accent:var(--sem-warn)}
+
+/* ============================ AVISOS / LÍMITES =========================== */
+.cb2-aviso,.cb2-limite{display:flex;gap:11px;align-items:flex-start;
+  font:500 11px/1.65 var(--cb2-mono);color:var(--muted);
+  padding:13px 15px;border-radius:var(--radius)}
+/* El aviso de atribución señala a una persona: se marca en ámbar, no en gris. */
+.cb2-aviso{border:1px solid var(--sem-warn);background:var(--sem-warn-tint)}
+.cb2-aviso b{color:var(--txt)}
+.cb2-limite{border:1px dashed var(--line-strong);background:var(--panel2)}
+.cb2-limite code,.cb2-vacio code{font-size:10px;background:var(--panel);border:1px solid var(--hair);
+  border-radius:3px;padding:1px 4px}
+
+.cb2-vacio{font:500 11.5px var(--cb2-mono);color:var(--muted);line-height:1.65;
+  padding:28px;text-align:center;border:1px dashed var(--line-strong);border-radius:var(--radius);background:var(--panel2)}
+.cb2-vacio small{display:block;margin-top:8px;font-size:10px;color:var(--faint)}
+.cb2-vacio-mini{font:500 10.5px var(--cb2-mono);color:var(--faint);padding:14px 0;text-align:center}
+.cb2-nota-mini{font:500 9.5px var(--cb2-mono);color:var(--faint);margin-top:10px;line-height:1.5}
+
+/* ============================== BLOQUES ================================== */
+.cb2-bloque{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--pad-card,22px 24px);box-shadow:var(--shadow);min-width:0}
+.cb2-bloque-t{display:flex;align-items:center;gap:9px;font:700 10px var(--cb2-mono);letter-spacing:.9px;
+  text-transform:uppercase;color:var(--muted);padding-bottom:11px;margin-bottom:13px;border-bottom:1px solid var(--line)}
+.cb2-row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-card,30px);align-items:start}
+@media (max-width:1080px){.cb2-row2{grid-template-columns:1fr}}
+
+/* reincidentes */
+.cb2-reinc{display:flex;flex-wrap:wrap;gap:8px}
+.cb2-chip{display:inline-flex;align-items:baseline;gap:7px;border:1px solid var(--sem-bad);
+  background:var(--sem-bad-tint);border-radius:6px;padding:5px 10px}
+.cb2-chip b{font:900 14px var(--cb2-cond);letter-spacing:.3px;color:var(--txt)}
+.cb2-chip i{font:600 9.5px var(--cb2-mono);font-style:normal;color:var(--bad);letter-spacing:.3px}
+
+/* ============================== GRÁFICA ================================== */
+.cb2-graf{display:flex;gap:9px;height:190px}
+.cb2-graf-y{display:flex;flex-direction:column;justify-content:space-between;
+  font:600 9px var(--cb2-mono);color:var(--faint);padding-bottom:18px}
+.cb2-barras{flex:1 1 auto;display:flex;align-items:flex-end;gap:2px;min-width:0;
+  border-bottom:1px solid var(--line-strong)}
+.cb2-col{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:1px;
+  height:100%;padding-bottom:18px;min-width:0}
+.cb2-col span{display:block;border-radius:2px 2px 0 0;min-height:1px;transition:height .5s var(--ease-out)}
+.cb2-b-carga{width:56%;background:color-mix(in srgb,var(--gray) 30%,transparent)}
+.cb2-b-caida{width:34%;background:var(--sem-bad)}
+.cb2-col em{position:absolute;bottom:2px;left:0;right:0;text-align:center;font:500 8px var(--cb2-mono);
+  color:var(--faint);font-style:normal;white-space:nowrap;overflow:hidden}
+.cb2-col:hover .cb2-b-carga{background:color-mix(in srgb,var(--gray) 48%,transparent)}
+
+.cb2-leyenda{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:11px;
+  padding-top:10px;border-top:1px solid var(--hair)}
+.cb2-k{display:inline-flex;align-items:center;gap:6px;font:500 9.5px var(--cb2-mono);color:var(--muted)}
+.cb2-k i{width:11px;height:9px;border-radius:2px;display:inline-block}
+.cb2-k i.k-carga{background:color-mix(in srgb,var(--gray) 30%,transparent)}
+.cb2-k i.k-caida{background:var(--sem-bad)}
+.cb2-k i.k-pt{width:9px;height:9px;border-radius:50%;background:var(--sem-bad);opacity:.75}
+.cb2-k i.k-pt-rep{width:13px;height:13px;border-radius:50%;background:var(--sem-bad)}
+.cb2-k-n{font:500 9px var(--cb2-mono);color:var(--faint);margin-left:auto;line-height:1.4}
+
+/* ================================ MAPA =================================== */
+.cb2-mapa{width:100%;height:auto;display:block;border-radius:var(--radius-sm);overflow:visible}
+.cb2-mapa-bg{fill:var(--panel2)}
+.cb2-mapa-g{stroke:var(--hair);stroke-width:1}
+.cb2-pt{fill:var(--sem-bad);fill-opacity:.55;stroke:var(--sem-bad);stroke-width:1.4;cursor:help}
+.cb2-pt.rep{fill-opacity:.82;stroke-width:2}
+
+/* ================================ TABLA ================================== */
+.cb2-tabla-wrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:var(--radius)}
+.cb2-tabla{width:100%;border-collapse:collapse;min-width:840px}
+.cb2-tabla thead th{font:700 9px var(--cb2-mono);letter-spacing:.9px;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:11px 10px;border-bottom:1px solid var(--line-strong);
+  background:var(--panel2);position:sticky;top:0;z-index:1;white-space:nowrap}
+.cb2-tabla th.c,.cb2-tabla td.c{text-align:center}
+.cb2-tabla td{padding:9px 10px;border-bottom:1px solid var(--hair);vertical-align:middle;
+  font:500 11.5px var(--cb2-mono);color:var(--txt)}
+.cb2-tabla tbody tr{cursor:pointer;transition:background .15s var(--ease-out)}
+.cb2-tabla tbody tr:hover{background:var(--lime-soft)}
+.cb2-tabla tbody tr.on{background:var(--lime-soft);box-shadow:inset 2px 0 0 var(--lime)}
+.cb2-tabla tbody tr:last-child td{border-bottom:0}
+
+.cb2-cuando b{display:block;font:700 11.5px var(--cb2-mono);color:var(--txt);white-space:nowrap}
+.cb2-cuando small{display:block;font:500 10px var(--cb2-mono);color:var(--faint);margin-top:1px}
+.cb2-placa{font:900 14px var(--cb2-cond);letter-spacing:.4px}
+.cb2-udn{font:500 10px var(--cb2-mono);color:var(--muted)}
+.cb2-geo{font:500 10px var(--cb2-mono);color:var(--muted);white-space:nowrap}
+.cb2-sin{font:500 9.5px var(--cb2-mono);color:var(--faint);font-style:italic}
+
+.cb2-franja{display:inline-block;font:700 9px var(--cb2-mono);letter-spacing:.6px;text-transform:uppercase;
+  padding:3px 7px;border-radius:4px;white-space:nowrap;border:1px solid var(--line-strong);color:var(--muted)}
+/* madrugada y noche son las señales fuertes: van marcadas, el resto neutro */
+.cb2-franja.f-madrugada{color:var(--sem-bad-on);background:var(--sem-bad-solid);border-color:transparent}
+.cb2-franja.f-noche{color:var(--sem-high-on);background:var(--sem-high-solid);border-color:transparent}
+
+.cb2-resp{display:flex;flex-direction:column;gap:3px}
+.cb2-resp b{font:700 11.5px var(--cb2-cond);font-size:12.5px;letter-spacing:.3px;text-transform:uppercase;color:var(--txt)}
+.cb2-cert{font:700 8.5px var(--cb2-mono);font-style:normal;letter-spacing:.7px;text-transform:uppercase;
+  border-radius:3px;padding:1px 6px;width:max-content;cursor:help;border:1px solid currentColor}
+.cb2-cert.c-confirmada{color:var(--sem-bad-on);background:var(--sem-bad-solid);border-color:transparent}
+.cb2-cert.c-alta{color:var(--high)}
+.cb2-cert.c-media{color:var(--warn)}
+.cb2-cert.c-baja{color:var(--faint)}
+
+.cb2-maps{font:700 9.5px var(--cb2-mono);letter-spacing:.5px;text-transform:uppercase;
+  color:var(--lime-ink);text-decoration:none;border:1px solid var(--line-strong);
+  border-radius:4px;padding:3px 8px;white-space:nowrap}
+.cb2-maps:hover{background:var(--lime-soft);border-color:var(--lime-dark)}
+.cb2-maps:focus-visible{outline:2px solid var(--lime-dark);outline-offset:1px}
+.cb2-fuera{font:600 9.5px var(--cb2-mono);color:var(--faint);border:1px dashed var(--line-strong);
+  border-radius:3px;padding:2px 6px;cursor:help}
+.cb2-btn{margin-top:9px;border:1px solid var(--lime-dark);background:var(--lime);color:var(--on-lime);
+  font:700 10.5px var(--cb2-mono);letter-spacing:.4px;text-transform:uppercase;
+  border-radius:6px;padding:8px 13px;cursor:pointer;transition:background .16s var(--ease-out)}
+.cb2-btn:hover:not(:disabled){background:var(--lime-bright)}
+.cb2-btn:disabled{opacity:.6;cursor:progress}
+.cb2-btn:focus-visible{outline:2px solid var(--lime-dark);outline-offset:2px}
+
+/* responsables reincidentes — el bloque accionable */
+.cb2-focos{border-color:var(--sem-bad)}
+.cb2-personas{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.cb2-persona{border:1px solid var(--line);border-left:3px solid var(--sem-bad);
+  border-radius:var(--radius-sm);padding:10px 13px;background:var(--panel-in)}
+.cb2-p-n{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  font:900 13.5px var(--cb2-cond);letter-spacing:.3px;text-transform:uppercase;color:var(--txt)}
+.cb2-p-d{font:500 10px var(--cb2-mono);color:var(--muted);margin-top:5px;line-height:1.55}
+.cb2-p-d b{color:var(--txt);font-weight:700}
+.cb2-p-d i{font-style:normal;color:var(--bad);font-weight:700}
+
+
+/* ================== v2 — interactividad y mapa real ====================== */
+.cb2-leaflet{height:380px;border-radius:var(--radius-sm);overflow:hidden;
+  border:1px solid var(--line-strong);background:var(--panel2)}
+.gx-abierto .cb2-leaflet{height:100%;min-height:400px;flex:1 1 auto}
+:root[data-theme="dark"] .cb2-leaflet .leaflet-tile{
+  filter:invert(1) hue-rotate(180deg) brightness(.86) saturate(.55)}
+.cb2-bloque-n{margin-left:auto;font:500 9px var(--cb2-mono);color:var(--faint);
+  text-transform:none;letter-spacing:.2px}
+
+/* la card de responsable ahora es un BOTÓN: filtra tabla y mapa */
+.cb2-persona{text-align:left;cursor:pointer;font:inherit;
+  transition:transform .16s var(--ease-out),box-shadow .16s,border-color .16s}
+.cb2-persona:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--sem-bad)}
+.cb2-persona.on{box-shadow:0 0 0 2px var(--sem-bad);background:var(--sem-bad-tint)}
+.cb2-persona:focus-visible{outline:2px solid var(--lime-dark);outline-offset:2px}
+.cb2-p-fechas{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.cb2-p-f{font:700 9.5px var(--cb2-mono);font-variant-numeric:tabular-nums;text-decoration:none;
+  color:var(--txt);background:var(--panel);border:1px solid var(--line-strong);
+  border-radius:4px;padding:2px 7px;white-space:nowrap}
+/* noche/madrugada en sólido: es cuando roban */
+.cb2-p-f.noct{color:var(--sem-bad-on);background:var(--sem-bad-solid);border-color:transparent}
+.cb2-p-cta{margin-top:9px;font:700 9.5px var(--cb2-mono);letter-spacing:.6px;
+  text-transform:uppercase;color:var(--lime-ink)}
+.cb2-persona.on .cb2-p-cta{color:var(--bad)}
+:root[data-theme="dark"] .cb2-p-cta{color:var(--lime)}
+
+.cb2-filtro-chip{margin-left:12px;display:inline-flex;align-items:center;gap:7px;
+  font:700 9.5px var(--cb2-mono);letter-spacing:.4px;text-transform:none;
+  color:var(--sem-bad-on);background:var(--sem-bad-solid);border-radius:5px;padding:4px 9px}
+.cb2-filtro-chip button{border:0;background:transparent;color:inherit;cursor:pointer;
+  font:inherit;padding:0 2px;opacity:.85}
+.cb2-filtro-chip button:hover{opacity:1}
+
+/* la barra de caídas lleva su cifra encima — es LA señal */
+.cb2-b-caida{position:relative;min-height:2px}
+.cb2-b-caida u{position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+  text-decoration:none;font:800 10px var(--cb2-mono);color:var(--bad)}
+.gx-abierto .cb2-graf{height:100%;min-height:300px;flex:1 1 auto}
+
+
+/* ============================================================================
+ * ESTADO EN KPIs — lenguaje DASHTRAX, v2 tras crítica del cliente.
+ * El intento anterior (banda lateral + degradado) violaba la regla congelada
+ * "sin franjas laterales; presencia por tamaño y color" y se veía genérico.
+ * La urgencia se dice como ya la dicen los módulos aprobados:
+ *   · la CIFRA grande en el color del semáforo (ya existe)
+ *   · un CHIP sólido tipo "CRÍTICO" — el mismo del gauge de Seguridad
+ *   · en crítico, el chip respira — el mismo pulso del Cerebro Operativo
+ * ========================================================================== */
+.cb2-kpi{position:relative}
+.cb2-kpi.ok .v{color:var(--tile-ok,var(--ok))}
+.cb2-kpi.warn .v{color:var(--tile-warn,var(--warn))}
+.cb2-kpi.high .v{color:var(--tile-high,var(--high))}
+.cb2-kpi.bad .v{color:var(--tile-bad,var(--bad))}
+/* la etiqueta reserva el hueco del chip: encimados = ilegible */
+.cb2-kpi.warn .cb2-kpi-top,.cb2-kpi.high .cb2-kpi-top,.cb2-kpi.bad .cb2-kpi-top{padding-right:68px}
+.cb2-kpi.warn::after,.cb2-kpi.high::after,.cb2-kpi.bad::after{
+  position:absolute;top:12px;right:12px;
+  font:800 8.5px var(--mono,monospace);letter-spacing:1.2px;
+  padding:3px 7px;border-radius:4px}
+.cb2-kpi.warn::after{content:'VIGILAR';color:var(--sem-warn-on);background:var(--sem-warn-solid)}
+.cb2-kpi.high::after{content:'ALTO';color:var(--sem-high-on);background:var(--sem-high-solid)}
+.cb2-kpi.bad::after{content:'CRÍTICO';color:var(--sem-bad-on);background:var(--sem-bad-solid);
+  animation:cb2-resp 2.6s ease-in-out infinite}
+/* pulso por ANILLO, nunca por opacidad: apagar el chip rompía su contraste */
+@keyframes cb2-resp{0%,100%{box-shadow:0 0 0 0 transparent}
+  50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--sem-bad) 32%,transparent)}}
+@media (prefers-reduced-motion:reduce){.cb2-kpi.bad::after{animation:none}}
+
+/* ============ v3 — responsables como RANKING (referencia: módulo Seguridad) == */
+.cb2-rank-scroll{overflow:auto;max-height:460px;border:1px solid var(--line);border-radius:var(--radius)}
+.cb2-rank{min-width:860px}
+.cb2-rank tbody tr{cursor:pointer}
+.cb2-rank tbody tr.on{background:var(--lime-soft);box-shadow:inset 2px 0 0 var(--lime)}
+.cb2-r-nom span{display:block;font:700 12.5px var(--cb2-cond);letter-spacing:.3px;text-transform:uppercase;
+  color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
+.cb2-r-nom small{display:flex;align-items:center;gap:6px;font:500 9px var(--cb2-mono);
+  color:var(--faint);margin-top:2px}
+.cb2-nchip{display:inline-block;min-width:26px;text-align:center;font:800 12.5px var(--cb2-mono);
+  font-variant-numeric:tabular-nums;color:var(--sem-bad-on);background:var(--sem-bad-solid);
+  border-radius:4px;padding:2px 7px}
+.cb2-th-b{width:12%}
+.cb2-r-barra i{display:block;height:7px;border-radius:4px;background:var(--sem-bad);min-width:5px;
+  transition:width .5s var(--ease-out)}
+.cb2-r-uni b{font:900 13px var(--cb2-cond);letter-spacing:.4px}
+.cb2-r-uni small{display:block;font:500 9px var(--cb2-mono);color:var(--bad);margin-top:1px}
+.cb2-r-fechas{font:500 10px var(--cb2-mono);color:var(--muted);max-width:340px;line-height:1.7}
+.cb2-r-fechas u{text-decoration:none;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* nocturna = texto rojo con peso, no pastilla: 63% de pastillas rojas era ruido */
+.cb2-r-fechas u.noct{color:var(--bad);font-weight:800}
+/* "+N antes": el resto del historial de la unidad, sin inflar el renglón. */
+.cb2-mas{font:700 9px var(--cb2-mono);letter-spacing:.3px;color:var(--muted);
+  border:1px solid var(--line);border-radius:4px;padding:1px 4px;white-space:nowrap}
+/* Los responsables largos tampoco deben estirar el renglón. */
+.cb2-rank .cb2-r-uni{max-width:230px}
+.cb2-rank .cb2-r-uni b{display:block;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cb2-noct{font:800 9px var(--cb2-mono);letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;
+  color:var(--sem-bad-on);background:var(--sem-bad-solid);border-radius:4px;padding:2px 6px;margin-left:4px}
+
+/* gráfica v3: apilada nocturna/diurna */
+/* .cb2-col span (0,1,1) pisaba a .cb2-apilada (0,1,0): la pila salía en display
+   block y los segmentos con flex-grow medían cero. Se ancla con el padre. */
+.cb2-col .cb2-apilada{display:flex;flex-direction:column;width:46%;min-height:4px;position:relative;
+  border-radius:3px 3px 0 0;overflow:visible}
+.cb2-col .cb2-apilada i{display:block;width:100%;min-height:3px}
+.cb2-s-diur{background:var(--sem-high);border-radius:3px 3px 0 0}
+.cb2-s-noct{background:var(--sem-bad)}
+.cb2-apilada i:first-of-type{border-radius:3px 3px 0 0}
+.cb2-apilada u{position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+  text-decoration:none;font:800 10px var(--cb2-mono);color:var(--bad)}
+.cb2-k i.k-noct{background:var(--sem-bad)}
+.cb2-k i.k-diur{background:var(--sem-high)}
+
+/* auditoría: idem */
+.cb2-maps,.cb2-p-cta{color:var(--lime-text)}
+
+/* auditoría oscura: el aviso ámbar dejaba el texto muted en 2.9:1 */
+:root[data-theme="dark"] .cb2-aviso{color:var(--txt)}
+
+/* Δ% de la caída (enriquecido diario vía api_get_vehicle_parameter_values) */
+.cb2-delta{display:inline-block;font:800 11px var(--cb2-mono);font-variant-numeric:tabular-nums;
+  padding:2px 7px;border-radius:5px;background:var(--sem-warn-bg,rgba(230,150,0,.14));color:var(--warn,#B26A00)}
+.cb2-delta.fuerte{background:var(--sem-bad-solid);color:var(--sem-bad-on)}
+/* ≥40% = media carga o más. Se distingue por ANILLO, no por degradado ni franja
+   lateral (regla de diseño del cliente): el chip sólido ya carga la urgencia. */
+.cb2-delta.grave{box-shadow:0 0 0 2px var(--panel,#fff),0 0 0 3.5px var(--sem-bad,#D93F37)}
+.cb2-delta.recal{background:var(--panel-2,rgba(0,0,0,.05));color:var(--muted)}
+.cb2-delta.na,.cb2-delta.pend{background:transparent;color:var(--muted);font-weight:600;padding:2px 3px}
+.cb2-recal{display:inline-block;font:700 9px var(--cb2-mono);letter-spacing:.4px;text-transform:uppercase;
+  font-style:normal;color:var(--muted);border:1px solid var(--border,rgba(0,0,0,.16));
+  border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:1px}

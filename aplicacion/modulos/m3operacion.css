@@ -1,0 +1,251 @@
+/* ============================================================================
+ * MÓDULO 3 — Score de Operación · estilos DASHTRAX (scoped .m3op)
+ * Usa las variables CSS del portal (index.html): --lime, --gray, --panel, etc.
+ * ==========================================================================*/
+
+.m3op{display:flex;flex-direction:column;gap:var(--gap-bloque,38px)}
+
+/* ---------- cabecera ---------- */
+.m3op-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.m3op-head h2{margin:0;font-family:var(--cond);font-size:22px;letter-spacing:.4px;text-transform:uppercase}
+.m3op-sub{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);margin-top:3px}
+.m3op-formula{font-size:11px;color:var(--muted);border:1px dashed var(--line-strong);
+  border-radius:var(--radius-sm);padding:6px 10px;background:var(--panel2)}
+.m3op .mono{font-family:var(--mono)}
+.m3op-empty{padding:38px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px;
+  border:1px dashed var(--line-strong);border-radius:var(--radius);background:var(--panel)}
+.m3op-nodata{color:var(--faint);font-family:var(--mono);font-size:10px}
+
+/* ---------- colores de score ---------- */
+.m3op .sc-ok{color:var(--ok)} .m3op .sc-warn{color:var(--warn)}
+.m3op .sc-high{color:var(--high)} .m3op .sc-bad{color:var(--bad)} .m3op .sc-na{color:var(--faint)}
+
+/* ---------- barra de selección de operador ---------- */
+.m3op-selbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 14px;border-radius:var(--radius);border:1px solid var(--lime-dark);
+  background:var(--lime-soft);box-shadow:var(--shadow)}
+.m3op-selbar .m3op-ic{width:22px;height:22px;flex:0 0 22px}
+.m3op-selbar .m3op-ic svg{width:20px;height:20px}
+.m3op-selbar-t{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;flex:1;min-width:0}
+.m3op-selbar-t b{font-family:var(--cond);font-weight:900;font-size:15px;
+  letter-spacing:.3px;text-transform:uppercase;color:var(--txt)}
+.m3op-selbar-sc{font-size:11px;font-weight:700;padding:2.5px 8px;border-radius:4px}
+.m3op-selbar-sc.sc-bad{background:var(--sem-bad-solid,var(--bad));color:var(--sem-bad-on,#fff)}
+.m3op-selbar-sc.sc-high{background:var(--sem-high-solid,var(--high));color:var(--sem-high-on,#401E00)}
+.m3op-selbar-sc.sc-warn{background:var(--sem-warn-solid,var(--warn));color:var(--sem-warn-on,#3B2F00)}
+.m3op-selbar-sc.sc-ok{background:var(--sem-ok-solid,var(--ok));color:var(--sem-ok-on,#fff)}
+.m3op-selbar-n{font-size:10px;color:var(--muted);letter-spacing:.3px}
+.m3op-selbar-x{border:1px solid var(--edge);background:var(--panel);color:var(--txt);
+  border-radius:6px;padding:7px 12px;cursor:pointer;font-size:10px;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;
+  transition:border-color .16s var(--ease-out),background .16s var(--ease-out)}
+.m3op-selbar-x:hover{border-color:var(--lime-dark);background:var(--panel-in)}
+
+/* ---------- KPIs ---------- */
+.m3op-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));gap:var(--gap-card,30px);align-items:stretch}
+/* SIN franja lateral: la jerarquia es la cifra sobre el rotulo. */
+.m3op-kpi{background:var(--tile-bg,var(--panel));border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:6px;
+  position:relative;overflow:hidden}
+.m3op-kpi-gauge{align-items:center;text-align:center;gap:4px}
+.m3op-kpi-v{font-size:28px;font-weight:700;letter-spacing:-.5px}
+.m3op-kpi.sc-high .m3op-kpi-v{color:var(--high)}
+.m3op-kpi.sc-bad .m3op-kpi-v{color:var(--bad)}
+.m3op-kpi-u{font-size:12px;color:var(--muted);margin-left:3px;font-weight:500}
+/* chip de contexto del KPI: delta vs semana previa / peor familia — SÓLIDO
+   cuando la noticia es mala, para que la card no se sienta vacía ni muda */
+.m3op-kd{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;
+  font-size:9.5px;font-weight:700;letter-spacing:.3px;line-height:1;
+  padding:3.5px 7px;border-radius:4px;white-space:nowrap;max-width:100%}
+.m3op-kpi-gauge .m3op-kd{align-self:center}
+.m3op-kd.up{background:var(--sem-ok-solid,var(--ok));color:var(--sem-ok-on,#fff)}
+.m3op-kd.down{background:var(--sem-bad-solid,var(--bad));color:var(--sem-bad-on,#fff)}
+.m3op-kd.neu,.m3op-kd.eq{border:1px solid var(--line-strong);color:var(--tile-muted,var(--muted))}
+.m3op-kd.fam{border:1px solid var(--line-strong);color:var(--tile-txt,var(--txt));
+  background:var(--panel2)}
+:root[data-theme="dark"] .m3op-kd.fam{background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.2)}
+.m3op-kd .m3op-famdot{width:8px;height:8px}
+/* el KPI se pinta sobre --tile-bg (#63666A en oscuro): con --muted daba 2.12:1 */
+.m3op-kpi-cap{font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--tile-muted,var(--muted));display:flex;flex-direction:column;gap:2px}
+.m3op-kpi-note{font-size:9px;color:var(--tile-faint,var(--faint));letter-spacing:.4px;text-transform:none}
+
+/* ---------- gauge SVG ---------- */
+.m3op-gauge{width:110px;height:110px;display:block}
+.m3op-gauge-track{fill:none;stroke:var(--line-strong);stroke-width:7;stroke-linecap:round}
+.m3op-gauge-fill{fill:none;stroke-width:8;stroke-linecap:round;stroke:var(--lime-dark)}
+.m3op-gauge.sc-ok .m3op-gauge-fill{stroke:var(--sem-ok,var(--lime-dark))}
+.m3op-gauge.sc-warn .m3op-gauge-fill{stroke:var(--sem-warn,var(--warn))}
+.m3op-gauge.sc-high .m3op-gauge-fill{stroke:var(--sem-high,var(--high))}
+.m3op-gauge.sc-bad .m3op-gauge-fill{stroke:var(--sem-bad,var(--bad))}
+.m3op-gauge-tick{stroke:var(--hair);stroke-width:1.5}
+.m3op-gauge-val{font-family:var(--mono);font-size:26px;font-weight:700;fill:var(--txt)}
+.m3op-gauge-sub{font-family:var(--mono);font-size:8px;fill:var(--faint);letter-spacing:1px}
+
+/* ---------- paneles ---------- */
+.m3op-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:var(--pad-card,22px 24px)}
+.m3op-panel h3{margin:0 0 12px;font-family:var(--mono);font-size:10.5px;font-weight:600;
+  letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:8px}
+/* regla de cierre SOLIDA: el punteado decorativo se retiro del portal */
+.m3op-panel h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.m3op-row2{display:grid;grid-template-columns:1.2fr 1fr;gap:var(--gap-card,30px);align-items:stretch}
+@media(max-width:860px){.m3op-row2{grid-template-columns:1fr}}
+
+/* ---------- familias de hábito ----------
+   SEÑAL VIVA del semáforo, no la tinta de texto: el rojo/oro/naranja se
+   distinguen de un vistazo (queja del cliente: barras casi idénticas). */
+.m3op .fam-motor{--fam:var(--sem-bad,#D93F37)} .m3op .fam-ralenti{--fam:var(--sem-warn,#EDC531)}
+.m3op .fam-clutch{--fam:var(--sem-high,#EE8B36)} .m3op .fam-pedales{--fam:var(--gray,#63666A)}
+:root[data-theme="dark"] .m3op .fam-pedales{--fam:var(--gray-l,#8A8D91)}
+.m3op-fams{display:flex;flex-direction:column;gap:9px}
+.m3op-famrow{display:grid;grid-template-columns:11px 150px 1fr auto;align-items:center;gap:10px}
+.m3op-famdot{width:11px;height:11px;border-radius:2px;background:var(--fam,var(--lime));flex-shrink:0}
+.m3op-famlb{font-size:12px;color:var(--txt)}
+.m3op-fambar{height:13px;background:var(--panel2);border-radius:4px;overflow:hidden;border:1px solid var(--hair)}
+.m3op-famfill{display:block;height:100%;background:var(--fam,var(--lime));border-radius:3px;
+  transition:width .5s var(--ease-out)}
+.m3op-famv{font-size:10px;color:var(--muted);white-space:nowrap}
+@media(max-width:560px){.m3op-famrow{grid-template-columns:11px 1fr auto}.m3op-fambar{display:none}}
+/* desglose por subcategoría (vista expandida de la gráfica) */
+.m3op-famgrp{padding:6px 0;border-top:1px solid var(--hair)}
+.m3op-famgrp:first-child{border-top:0}
+.m3op-famrow.cab .m3op-famlb{font-family:var(--cond);font-weight:900;font-size:13px;
+  letter-spacing:.4px;text-transform:uppercase}
+.m3op-famrow.cab{grid-template-columns:11px 1fr auto;margin-bottom:4px}
+.m3op-famrow.sub{grid-template-columns:11px 210px 1fr auto;margin:3px 0 3px 8px}
+.m3op-famrow.sub .m3op-famdot{opacity:.55;width:8px;height:8px}
+.m3op-famrow.sub .m3op-fambar{height:10px}
+.gx-abierto .m3op-fams{overflow:auto;flex:1 1 auto;min-height:0}
+
+/* ---------- tendencia semanal ---------- */
+.m3op-sparkwrap{padding:4px 0}
+.m3op-spark{width:100%;max-width:340px;height:auto;display:block}
+.m3op-spark-line{fill:none;stroke:var(--lime-dark);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.m3op-spark-dot{fill:var(--panel);stroke:var(--lime-dark);stroke-width:2.4}
+.m3op-spark-dot.sc-warn{stroke:var(--sem-warn,var(--warn))} .m3op-spark-dot.sc-high{stroke:var(--sem-high,var(--high))}
+.m3op-spark-dot.sc-bad{stroke:var(--sem-bad,var(--bad))}
+.m3op-spark-lb{font-family:var(--mono);font-size:7.5px;fill:var(--faint)}
+.m3op-spark-v{font-family:var(--mono);font-size:9px;font-weight:700;fill:var(--txt)}
+.m3op-spark-v.sc-ok{fill:var(--ok)} .m3op-spark-v.sc-warn{fill:var(--warn)}
+.m3op-spark-v.sc-high{fill:var(--high)} .m3op-spark-v.sc-bad{fill:var(--bad)}
+.m3op-delta{margin-top:8px;font-size:11px;font-weight:600}
+.m3op-delta.up{color:var(--ok)} .m3op-delta.down{color:var(--bad)}
+
+/* ---------- ranking ---------- */
+.m3op-leyenda{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.m3op-leg{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.m3op-ranking{display:flex;flex-direction:column}
+.m3op-oprow{display:grid;grid-template-columns:26px 44px minmax(140px,1.1fr) minmax(90px,1fr) auto;
+  align-items:center;gap:10px;padding:7px 6px;border-top:1px solid var(--hair);cursor:pointer;
+  transition:background .16s var(--ease-out),box-shadow .16s var(--ease-out)}
+.m3op-oprow:first-child{border-top:none}
+.m3op-oprow:hover{background:var(--panel2)}
+.m3op-oprow:focus-visible{outline:2px solid var(--lime-dark);outline-offset:-2px;border-radius:6px}
+.m3op-oprow.sel{background:var(--lime-soft);border-radius:6px;
+  box-shadow:inset 0 0 0 1px var(--lime-dark)}
+.m3op-oprow.sel .m3op-opname{font-weight:800}
+.m3op-rk{font-size:10px;color:var(--faint);text-align:right}
+/* el score es una PASTILLA de estado: crítico = rojo sólido que grita,
+   alto = naranja sólido — no un numerito rojizo */
+.m3op-score{font-size:14px;font-weight:700;text-align:center;border-radius:5px;
+  padding:3px 0;min-width:40px}
+.m3op-score.sc-bad{background:var(--sem-bad-solid,var(--bad));color:var(--sem-bad-on,#fff)}
+.m3op-score.sc-high{background:var(--sem-high-solid,var(--high));color:var(--sem-high-on,#401E00)}
+.m3op-score.sc-warn{background:var(--sem-warn-solid,var(--warn));color:var(--sem-warn-on,#3B2F00)}
+.m3op-score.sc-ok{background:color-mix(in srgb,var(--sem-ok,#3E8E41) 18%,transparent)}
+.m3op-opname{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m3op-opbar{display:block;min-width:80px}
+.m3op-stack{width:100%;height:8px;display:block}
+.m3op-seg{fill:var(--fam,var(--lime))}
+.m3op-opmeta{font-size:9.5px;color:var(--muted);white-space:nowrap;text-align:right}
+/* móvil: dos líneas — nombre completo arriba, métricas debajo; el nombre no
+   se sacrifica ante la columna de metadatos */
+@media(max-width:700px){
+  .m3op-oprow{grid-template-columns:22px 44px minmax(0,1fr);row-gap:2px}
+  .m3op-opbar{display:none}
+  .m3op-opmeta{grid-column:2 / 4;text-align:left;white-space:normal}
+}
+.m3op-vermas{margin-top:10px;width:100%;background:var(--panel2);color:var(--muted);
+  border:1px dashed var(--line-strong);border-radius:var(--radius-sm);padding:8px;cursor:pointer;
+  font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;
+  transition:all .16s var(--ease-out)}
+.m3op-vermas:hover{border-color:var(--lime-dark);color:var(--txt)}
+
+/* ---------- tabla daño a la unidad ---------- */
+.m3op-tablewrap{overflow-x:auto}
+.m3op-table{width:100%;border-collapse:collapse;font-size:12px}
+.m3op-table th{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 8px;
+  border-bottom:1px solid var(--line-strong);white-space:nowrap}
+.m3op-table td{padding:7px 8px;border-bottom:1px solid var(--hair);vertical-align:middle}
+.m3op-table .num{text-align:right}
+.m3op-table tbody tr:hover{background:var(--panel2)}
+.m3op-placa{font-weight:700}
+.m3op-udn{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.m3op-dtc{display:inline-block;background:var(--sem-bad-solid,var(--bad));color:var(--sem-bad-on,#fff);
+  border:1px solid transparent;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700;margin:1px 0}
+.m3op-dtc-pend{font-family:var(--mono);font-size:9.5px;color:var(--warn);
+  border:1px dashed var(--warn);border-radius:4px;padding:1px 6px;opacity:.85}
+.m3op-nota{margin-top:10px;font-size:10.5px;color:var(--faint);line-height:1.5}
+.m3op-nota code{background:var(--panel-in);border:1px solid var(--line);border-radius:4px;
+  padding:0 4px;font-size:9.5px}
+
+/* ---------- consejos ---------- */
+.m3op-consejos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:var(--gap-card,30px);align-items:stretch}
+.m3op-consejo{background:var(--panel-in);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:var(--sp-4,18px);display:flex;flex-direction:column;gap:var(--sp-2,8px)}
+/* El tono del consejo lo lleva su TÍTULO, no el canto de la caja: es lo primero
+   que se lee y ya nombra el hecho ("Racha limpia" / "Frenados en aumento"). */
+.m3op-consejo.felic .m3op-consejo-t{color:var(--ok)}
+.m3op-consejo.alerta .m3op-consejo-t{color:var(--bad)}
+.m3op-consejo-t{font-family:var(--cond);font-weight:900;font-size:12.5px;letter-spacing:.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.m3op-consejo-n{font-size:9px;color:var(--muted);font-weight:500;white-space:nowrap}
+.m3op-consejo-b{font-size:11.5px;color:var(--muted);line-height:1.5}
+
+/* KPI sobre gris TRAXION (#63666A) — legibilidad */
+:root[data-theme="dark"] .m3op-kpi{border-color:rgba(255,255,255,.14)}
+:root[data-theme="dark"] .m3op-kpi b,:root[data-theme="dark"] .m3op-kpi .v{color:var(--tile-txt,#fff)}
+:root[data-theme="dark"] .m3op-kpi span,:root[data-theme="dark"] .m3op-kpi small{color:var(--tile-muted,rgba(255,255,255,.78))}
+
+/* ======================= iconos DASHTRAX (2 tonos) =======================
+ * Paths en aplicacion/iconos.js. Cero emojis, cero iconos de librería. */
+.m3op-ic{display:inline-grid;place-items:center;width:18px;height:18px;flex:0 0 18px;
+  margin-right:7px;--ic-accent:var(--lime-ink)}
+.m3op-ic svg{width:17px;height:17px;overflow:visible}
+.m3op-ic .dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.m3op-ic .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.m3op-panel h3{display:flex;align-items:center}
+.m3op-kpi-cap{display:flex;align-items:center;flex-wrap:wrap}
+/* iconos de KPI a 23px con el ACENTO del estado de la card: a 14px no daban
+   ningún reflejo de alerta (queja del cliente) */
+.m3op-kpi-cap .m3op-ic{width:23px;height:23px;flex:0 0 23px;margin-right:7px}
+.m3op-kpi-cap .m3op-ic svg{width:22px;height:22px}
+.m3op-kpi .m3op-ic .dash-icon-main{stroke:var(--tile-muted,var(--muted))}
+.m3op-kpi.sc-warn .m3op-ic{--ic-accent:var(--sem-warn,var(--warn))}
+.m3op-kpi.sc-high .m3op-ic{--ic-accent:var(--sem-high,var(--high))}
+.m3op-kpi.sc-bad .m3op-ic{--ic-accent:var(--sem-bad,var(--bad))}
+.m3op-kpi.sc-ok .m3op-ic{--ic-accent:var(--sem-ok,var(--ok))}
+/* alineación: misma altura de card por fila */
+.m3op-kpis{align-items:stretch}
+.m3op-kpi{height:100%}
+.m3op-kpi-v{font-variant-numeric:tabular-nums}
+
+/* ============ GRÁFICA EXPANDIDA A PRIMER PLANO (UIX.graficas) ============ */
+.m3op-sub{font:600 9.5px var(--m3op-mono,var(--mono));letter-spacing:.8px;
+  text-transform:uppercase;color:var(--faint);font-style:normal;margin-left:6px}
+.gx-abierto .m3op-sparkwrap{display:flex;flex:1 1 auto;min-height:180px}
+.gx-abierto .m3op-sparkwrap>svg{width:100%;height:100%;max-width:none}
+.gx-abierto .m3op-ranking,.gx-abierto .m3op-tablewrap{flex:1 1 auto;min-height:0;overflow:auto}
+
+/* --- chip de bajas ocultas (nunca ocultar en silencio · patrón M4) --- */
+.m3op-bajas{margin-left:10px;border:1px solid var(--sem-bad,#D93F37);background:transparent;
+  color:var(--sem-bad-ink,var(--sem-bad,#D93F37));border-radius:5px;padding:3px 8px;
+  font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;
+  transition:all .16s var(--ease-out,ease-out);vertical-align:middle}
+.m3op-bajas:hover{background:var(--sem-bad,#D93F37);color:#fff}
+.m3op-bajas.on{background:var(--sem-bad,#D93F37);border-color:var(--sem-bad,#D93F37);color:#fff}

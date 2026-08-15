@@ -1,0 +1,14 @@
+{
+  "name": "traffilog-connector",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pipeline de ingesta contra la API REST Traffilog v4.3: descarga semanal, enriquecido de ralentí y combustible, re-atribución de eventos y generación del archivo histórico que consume el portal.",
+  "scripts": {
+    "descargar": "node archivo_historico.mjs",
+    "enriquecer": "node enriquecer_extendido.mjs",
+    "reatribuir": "node reatribuir_eventos.mjs",
+    "rollups": "node generar_rollups.mjs",
+    "censo": "node censo_actividad.mjs"
+  }
+}

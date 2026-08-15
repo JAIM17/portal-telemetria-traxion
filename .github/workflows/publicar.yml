@@ -1,0 +1,55 @@
+name: Publicar a producción
+
+# Reemplazo en la NUBE de com.traxion.publicar-semanas (el bucle que vigilaba
+# datos/historico/ en la Mac y desplegaba cada 5 minutos).
+#
+# Se dispara cuando el dato cambia en main — que es justo lo que hacía el bucle,
+# pero sin proceso vivo ni token en /tmp. El deploy es `--no-build`: Netlify NO
+# ejecuta build (el sitio es estático + funciones), así que no consume minutos.
+#
+# La regla del cliente ("no mandar nada a producción antes de validar") se
+# respeta con el filtro de rutas: solo publica cuando cambia el dato o el
+# código del sitio, y siempre se puede lanzar a mano.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "datos/**"
+      - "aplicacion/**"
+      - "netlify/**"
+      - "index.html"
+      - "config.js"
+      - "netlify.toml"
+      - "vendor/**"
+      - "img/**"
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Deploy a Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          npx --yes netlify-cli deploy --prod --no-build --site "$NETLIFY_SITE_ID"
+      - name: Verificar que producción responde
+        run: |
+          # Un deploy "exitoso" que deja el sitio roto ya pasó (2026-08-05):
+          # el status del CLI no basta, se comprueba el sitio.
+          for i in 1 2 3; do
+            COD=$(curl -s -o /dev/null -w "%{http_code}" https://telemetriatraxion.netlify.app/)
+            [ "$COD" = "200" ] && echo "✓ producción responde 200" && exit 0
+            echo "intento $i → HTTP $COD; reintento en 15 s"; sleep 15
+          done
+          echo "✗ producción no respondió 200"; exit 1

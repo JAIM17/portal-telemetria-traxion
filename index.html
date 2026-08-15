@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#63666A">
+<link rel="icon" type="image/svg+xml" href="img/telemetria-icon.svg?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="img/telemetria-32.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="img/telemetria-180.png?v=2">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#63666A">
+<title>Evaluación de Conductores — TRAXION</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700;900&family=Roboto:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="vendor/echarts.min.js"></script>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf.plugin.autotable.min.js"></script>
+<script src="config.js"></script>
+<!-- Sistema compartido: registro único de iconos SVG dos-tonos (aplicacion/iconos.js)
+     + acordeón jerárquico y rejilla base de cards (aplicacion/ui.js).
+     El JS carga antes que los módulos; el CSS después, para que la retícula
+     común gane a los ajustes locales de cada módulo. -->
+<script src="aplicacion/iconos.js?v=61"></script>
+<script src="aplicacion/ui.js?v=61"></script>
+<!-- Módulos Fase 2 (PLAN_MAESTRO §4) — estilos scoped por módulo -->
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<script src="vendor/leaflet/leaflet.js"></script>
+<link rel="stylesheet" href="aplicacion/modulos/habitos.css?v=4">
+<link rel="stylesheet" href="aplicacion/modulos/alertas.css?v=2">
+<link rel="stylesheet" href="aplicacion/modulos/panorama.css?v=72">
+<link rel="stylesheet" href="aplicacion/modulos/score-seguridad.css?v=79">
+<link rel="stylesheet" href="aplicacion/modulos/cargas-fatiga.css?v=74" data-modulo="cargas">
+<link rel="stylesheet" href="aplicacion/modulos/m3operacion.css?v=63">
+<link rel="stylesheet" href="aplicacion/modulos/rankings.css?v=66">
+<link rel="stylesheet" href="aplicacion/modulos/cerebro.css?v=67" data-modulo="cerebro">
+<link rel="stylesheet" href="aplicacion/modulos/usuarios.css?v=62">
+<link rel="stylesheet" href="aplicacion/ui.css?v=62">
+<!-- Autenticación (docs/AUTH.md): gate de login + chip de sesión. El JS va en <head>
+     para marcar <html class="auth-pendiente"> antes de pintar nada del dashboard. -->
+<link rel="stylesheet" href="aplicacion/auth/auth.css?v=48">
+<script src="aplicacion/auth/auth.js?v=48"></script>
+<style>
+/* ============================================================
+   Evaluación de Conductores — identidad TRAXION
+   Análisis de eventos por operador (modelo del Excel LIPU)
+   ============================================================ */
+/* ------------------------------------------------------------------
+   TOKENS. Cada color de texto/estado va anotado con su ratio de
+   contraste WCAG 2.1 medido contra la superficie donde vive.
+   Texto normal ≥ 4.5:1 · texto grande (≥18.66px/700) ≥ 3:1 · bordes de
+   control y marcas de dato ≥ 3:1. Auditoría completa en docs/CONTRASTE.md.
+   ------------------------------------------------------------------ */
+:root{
+  --lime:#D0DF00; --lime-dark:#B5BD00; --lime-bright:#E3E935; --lime-soft:rgba(208,223,0,.14);
+  /* Tinta sobre superficie lime. Estaba escrita a mano como var(--on-lime) en 23 sitios
+     (y como #1a1b0e en otros 3): un token menos que nadie podía ajustar de golpe.
+     14.8:1 sobre --lime — el negro puro sobre lime vibra. */
+  --on-lime:#141509;
+  --lime-ink:#8A9000;            /* lima como TRAZO/BORDE sobre superficie clara — 3.33:1 vs panel · 3.07 vs panel2 */
+  --lime-text:#5C6100;   /* 6.6:1 panel · 4.8:1 bg (antes #686D00 = 4.16 sobre bg) */           /* lima como TEXTO pequeño — 5.36:1 vs panel · 4.94 vs panel2 · 4.51 vs bg */
+  --gray:#63666A; --gray-d:#3A3C3F; --gray-l:#8A8D91;
+  --bg:#DEE0D4; --panel:#FFFFFF; --panel2:#F4F5EF; --panel-in:#FFFFFF;
+  --line:#D5D7CC; --line-strong:#C3C5B8; --hair:rgba(58,60,63,.10);
+  --edge:#848678;                /* borde de CONTROL (input, chip, botón) — 3.57:1 vs panel · 3.29 vs panel2 · 3.01 vs bg */
+  --grid:rgba(58,60,63,.055);
+  --txt:#22242A;                 /* 14.94:1 vs panel */
+  --muted:#61645F;               /*  5.79:1 vs panel */
+  --faint:#5A5C55;               /*  6.4:1 vs panel · 4.9:1 vs bg — el auditor midió #666860 en 4.23 sobre --bg */
+  /* ==================================================================
+     SEMÁFORO DEDICADO. Paleta de ESTADO propia, separada de la marca
+     (el lime #D0DF00 queda RESERVADO a datos neutrales/series, NUNCA a
+     "bien"). Dos roles por estado para poder ser vivo Y accesible:
+       --sem-*      = SEÑAL viva: puntos, bordes, barras, arcos de gauge,
+                      números KPI. Verde/amarillo/naranja/rojo separados
+                      en TONO para distinguirse de un vistazo (daltónicos
+                      se apoyan además en forma/posición/etiqueta).
+       --sem-*-ink  = TINTA de TEXTO pequeño de estado. En claro un color
+                      saturado no llega a 4.5:1, así que la tinta se
+                      oscurece manteniendo el TONO (verde/oro/naranja/rojo).
+     El rojo es intenso a propósito; el verde lee "mejor", el ámbar y el
+     naranja ya no se confunden. Ratios medidos abajo. */
+  /* Semáforo — colores sólidos definidos por el cliente (verde/amarillo/naranja/rojo). */
+  --sem-ok:#3E8E41; --sem-warn:#EDC531; --sem-high:#EE8B36; --sem-bad:#D93F37;
+  --sem-ok-ink:#2E6E31;          /* variante oscura para texto sobre tinte claro */
+  --sem-warn-ink:#8A6200;        /*  5.29:1 · 4.85:1 (oro, no café) */
+  --sem-high-ink:#AC480D;        /*  5.49:1 · 4.88:1 (naranja, distinto del oro) */
+  --sem-bad-ink:#C01028;         /*  6.05:1 · 4.99:1 (rojo intenso) */
+  /* ESTADO SÓLIDO (petición del cliente: "un rojo debe gritar"). Fondo pleno
+     del semáforo + tinta de texto calibrada AA sobre ese fondo:
+       verde  #337436 + blanco  = 5.8:1   ámbar  #EDC531 + #3B2F00 = 8.9:1
+       naranja#EE8B36 + #401E00 = 6.0:1   rojo   #C42B23 + blanco  = 5.7:1 */
+  --sem-ok-solid:#337436;  --sem-ok-on:#FFFFFF;
+  --sem-warn-solid:#EDC531; --sem-warn-on:#3B2F00;
+  --sem-high-solid:#EE8B36; --sem-high-on:#401E00;
+  --sem-bad-solid:#C42B23; --sem-bad-on:#FFFFFF;
+  /* tinte de fondo (~34%) y borde (~72%) del resaltado de estado. Ya se subió
+     dos veces (12→22→34%): el criterio del cliente es URGENCIA VISIBLE — un
+     indicador en mal estado tiene que gritar, no susurrar. */
+  --sem-ok-tint:color-mix(in srgb,var(--sem-ok) 34%,var(--panel));
+  --sem-warn-tint:color-mix(in srgb,var(--sem-warn) 34%,var(--panel));
+  --sem-high-tint:color-mix(in srgb,var(--sem-high) 34%,var(--panel));
+  --sem-bad-tint:color-mix(in srgb,var(--sem-bad) 34%,var(--panel));
+  --sem-ok-edge:color-mix(in srgb,var(--sem-ok) 72%,var(--panel));
+  --sem-warn-edge:color-mix(in srgb,var(--sem-warn) 72%,var(--panel));
+  --sem-high-edge:color-mix(in srgb,var(--sem-high) 72%,var(--panel));
+  --sem-bad-edge:color-mix(in srgb,var(--sem-bad) 72%,var(--panel));
+  /* PUENTE de compatibilidad: los módulos escriben --ok/--warn/--high/--bad
+     (y -tint/-edge). Se re-cablean al set dedicado: TEXTO usa la tinta AA,
+     fondos/bordes usan la señal viva. Migrar un módulo = seguir usando --ok. */
+  --ok:var(--sem-ok-ink); --warn:var(--sem-warn-ink);
+  --high:var(--sem-high-ink); --bad:var(--sem-bad-ink);
+  --ok-tint:var(--sem-ok-tint);   --warn-tint:var(--sem-warn-tint);
+  --high-tint:var(--sem-high-tint); --bad-tint:var(--sem-bad-tint);
+  --ok-edge:var(--sem-ok-edge);   --warn-edge:var(--sem-warn-edge);
+  --high-edge:var(--sem-high-edge); --bad-edge:var(--sem-bad-edge);
+  /* cards KPI: blanco en claro (decisión del cliente) */
+  --tile-bg:#FFFFFF; --tile-txt:#22242A; --tile-muted:#4E514C; --tile-faint:#63665E;
+  /* escala de estado calibrada contra --tile-bg. Valores literales a propósito:
+     ui.css remapea --ok/--warn/… a estas dentro de las cards, y un var() cruzado
+     crearía un ciclo de custom properties. En claro = la tinta AA del semáforo. */
+  /* warn/high/bad ya eran idénticos a --sem-*-ink; el verde era el único ajeno
+     (#0D7A34, otro tono). Alineado a --sem-ok-ink: 6.3:1 sobre --tile-bg (AA). */
+  --tile-ok:#2E6E31; --tile-warn:#8A6200; --tile-high:#AC480D; --tile-bad:#C01028;
+  /* ---------------------------------------------------------------------------
+   * PALETA CATEGÓRICA (series de gráfica) — construida DESDE la marca.
+   * REGLA DEL CLIENTE (dicha dos veces, 2026-07-24): colores VIVOS. Un intento
+   * de paleta "terrosa de saturación contenida" se calificó de "triste" y se
+   * revirtió el mismo día. Las series van saturadas y con energía; la
+   * coherencia la pone el eje olivo-lima (--pal-1) y el uso disciplinado:
+   *
+   * NO son el semáforo y no deben significar estado: son dato neutral, igual
+   * que el lime. Todos ≥3:1 sobre --panel en claro (marcas no textuales).
+   * ------------------------------------------------------------------------ */
+  --pal-1:#8A9000;  /* olivo lima vivo — el eje de marca */
+  --pal-2:#00A0B0;  /* turquesa vivo */
+  --pal-3:#E08E00;  /* ámbar vivo */
+  --pal-4:#1E7BE0;  /* azul vivo */
+  --pal-5:#8E4FD0;  /* morado vivo */
+  --pal-6:#D6467F;  /* magenta vivo */
+  --pal-7:#2FA04C;  /* verde vivo (serie, no estado) */
+  --pal-8:#E0542E;  /* naranja rojizo vivo */
+  --shadow:0 2px 4px rgba(58,60,63,.10), 0 10px 24px -6px rgba(58,60,63,.30);
+  --shadow-lg:0 16px 40px -8px rgba(58,60,63,.42);
+  --radius:10px; --radius-sm:8px;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:'Roboto Condensed','Arial Narrow',sans-serif;
+  --ease-out:cubic-bezier(0.22,1,0.36,1);
+  --ease-io:cubic-bezier(0.77,0,0.175,1);
+  --sidebar-w:326px;
+  /* ------------------------------------------------------------------
+     ESCALA DE ESPACIADO. Una sola serie para todo el portal: márgenes
+     exteriores, padding de cards, separación entre secciones y entre
+     bloques de texto salen de aquí. Ningún valor suelto en px.
+     Paso ~1.4 entre escalones para que la diferencia se LEA.
+     ------------------------------------------------------------------ */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:18px; --sp-5:26px;
+  --sp-6:36px; --sp-7:48px; --sp-8:60px;
+  /* huecos derivados: los usan el portal y TODOS los módulos */
+  --gap-card:30px;               /* entre cards de una rejilla — aire generoso */
+  --gap-bloque:38px;             /* entre bloques/secciones de un módulo */
+  --pad-card:22px 24px;          /* interior de una card de contenido */
+  --pad-kpi:20px 22px;           /* interior de una card KPI */
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0E0F12; --panel:#191B1F; --panel2:#141518; --panel-in:#1F2126;
+  --line:#2A2C31; --line-strong:#34363C; --hair:rgba(255,255,255,.06);
+  --edge:#696C73;                /* 3.28:1 vs panel (antes #34363C = 1.43, no cumplia) */
+  --grid:rgba(208,223,0,.035);
+  --txt:#E9EAEC;                 /* 14.32:1 vs panel */
+  --muted:#9A9DA3;               /*  6.34:1 vs panel */
+  --faint:#94979D;               /*  5.9:1 panel · auditoría: #868990 caía a 4.2 sobre panel2 */
+  --lime-ink:#D0DF00;            /* en oscuro la lima ya rinde 11.69:1 sobre panel */
+  --lime-text:#D0DF00;
+  /* Semáforo dedicado — en oscuro la señal viva ya es AA como texto, así que
+     la tinta = la señal (verde 7.57 · ámbar 11.26 · naranja 7.62 · rojo 5.11
+     vs panel). El rojo sube en luminosidad para leerse intenso sin quemar. */
+  --sem-ok:#4CA150; --sem-warn:#EDC531; --sem-high:#EE8B36; --sem-bad:#E0473F;
+  /* tintas para TEXTO en oscuro: el crudo quedaba en 3.8-3.9:1 (auditoría).
+     Mismo matiz, más luz — el sólido/tint siguen usando el semáforo pleno. */
+  --sem-ok-ink:#7CCB83; --sem-warn-ink:#F2D34F;
+  --sem-high-ink:#F5A868; --sem-bad-ink:#F08078;
+  /* sólidos de estado en oscuro: mismos fondos plenos, tinta AA sobre ellos */
+  --sem-ok-solid:#2F7A33;  --sem-ok-on:#FFFFFF;
+  --sem-warn-solid:#EDC531; --sem-warn-on:#3B2F00;
+  --sem-high-solid:#EE8B36; --sem-high-on:#401E00;
+  --sem-bad-solid:#C42B23; --sem-bad-on:#FFFFFF;
+  --sem-ok-tint:color-mix(in srgb,var(--sem-ok) 36%,var(--panel));
+  --sem-warn-tint:color-mix(in srgb,var(--sem-warn) 32%,var(--panel));
+  --sem-high-tint:color-mix(in srgb,var(--sem-high) 32%,var(--panel));
+  --sem-bad-tint:color-mix(in srgb,var(--sem-bad) 26%,var(--panel));   /* el rojo es el más luminoso: menos tinte o el texto pierde 4.5:1 */
+  --sem-ok-edge:color-mix(in srgb,var(--sem-ok) 75%,var(--panel));
+  --sem-warn-edge:color-mix(in srgb,var(--sem-warn) 75%,var(--panel));
+  --sem-high-edge:color-mix(in srgb,var(--sem-high) 75%,var(--panel));
+  --sem-bad-edge:color-mix(in srgb,var(--sem-bad) 75%,var(--panel));
+  --ok:var(--sem-ok-ink); --warn:var(--sem-warn-ink);
+  --high:var(--sem-high-ink); --bad:var(--sem-bad-ink);
+  --ok-tint:var(--sem-ok-tint);   --warn-tint:var(--sem-warn-tint);
+  --high-tint:var(--sem-high-tint); --bad-tint:var(--sem-bad-tint);
+  --ok-edge:var(--sem-ok-edge);   --warn-edge:var(--sem-warn-edge);
+  --high-edge:var(--sem-high-edge); --bad-edge:var(--sem-bad-edge);
+  --lime-soft:rgba(208,223,0,.10);
+  /* KPI en gris TRAXION (decisión del cliente). Ojo: #63666A es una superficie
+     de luminancia media — el texto y los estados necesitan su propia escala. */
+  --tile-bg:#63666A; --tile-txt:#FFFFFF; --tile-muted:#F1F2F2; --tile-faint:#E4E5E5;
+  --tile-ok:#B6F5A2; --tile-warn:#FFE06B; --tile-high:#FFC191; --tile-bad:#FFC0B4;
+  /* Paleta categórica en oscuro: MISMOS tonos, subidos en luminosidad para
+     mantener ≥3:1 sobre --panel #191B1F. El orden no cambia: una serie conserva
+     su color al cambiar de tema. */
+  --pal-1:#D0DF00; --pal-2:#3FD5E5; --pal-3:#FFB03B; --pal-4:#5CA8FF;
+  --pal-5:#B98AF0; --pal-6:#FF7BAC; --pal-7:#5FD57F; --pal-8:#FF8A5C;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 10px 26px -12px rgba(0,0,0,.7);
+  --shadow-lg:0 22px 52px -14px rgba(0,0,0,.85);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--txt);position:relative;
+  font-family:'Roboto',system-ui,-apple-system,Segoe UI,Arial,sans-serif;font-size:13.5px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+/* fondo: papel cuadriculado técnico + resplandor de señal */
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:46px 46px}
+body::after{content:"";position:fixed;top:-30%;left:50%;transform:translateX(-50%);width:120vw;height:60vh;z-index:0;pointer-events:none;
+  background:radial-gradient(60% 60% at 50% 0%,rgba(208,223,0,.08),transparent 70%);opacity:.6}
+:root[data-theme="dark"] body::after{opacity:1}
+header.app-header,.toast,.modal,.modal-scrim,.scrim{position:relative;z-index:1}
+/* .layout SIN z-index: un stacking context aquí atrapaba al aside (drawer móvil,
+   z-45) por debajo del scrim global (z-44) → panel opaco e inclicable. */
+.layout{position:relative}
+h1,h2,h3,.cond{font-family:var(--cond)}
+.mono,.tile .v,.op-item .ev,table.mini td.num,.badge,.sembadge,.pill{font-family:var(--mono)}
+::selection{background:var(--lime);color:#1a1b0e}
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:4px}
+
+/* header */
+header.app-header{display:flex;align-items:center;gap:14px;padding:13px clamp(14px,3vw,26px);
+  padding-top:max(13px,env(safe-area-inset-top));
+  background:var(--gray);color:#fff;border-bottom:1px solid rgba(255,255,255,.16);
+  position:sticky;top:0;z-index:40;box-shadow:0 10px 30px -18px rgba(58,60,63,.55)}
+/* Filo de marca del encabezado: una regla lima SÓLIDA y continua. Antes era un
+   gradiente interrumpido; el trazo discontinuo es decoración, no información. */
+header.app-header::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--lime)}
+.logo{width:46px;height:46px;border-radius:9px;flex-shrink:0;display:grid;place-items:center;
+  background:var(--lime);color:var(--on-lime);font:900 15px/1 var(--cond);letter-spacing:.5px;
+  box-shadow:0 0 0 1px rgba(208,223,0,.4),0 8px 20px -8px rgba(208,223,0,.6);position:relative}
+.logo::after{content:"";position:absolute;inset:5px;border:1px solid rgba(20,21,9,.35);border-radius:5px}
+header.app-header h1{font-size:clamp(15px,2.3vw,20px);margin:0;font-weight:900;letter-spacing:.4px;line-height:1;text-transform:uppercase}
+/* .sub, .pill y .icon-btn viven sobre el gris TRAXION #63666A, una superficie de
+   luminancia media donde el margen de contraste es estrecho. En vez de aclarar
+   el relleno (que sube la luminancia del fondo y ASFIXIA al texto blanco), se
+   oscurece: rgba(0,0,0,.24) deja el chip en #4B4E51 y el texto sube a 7.75:1.
+   Medido en docs/CONTRASTE.md. */
+header.app-header .sub{color:rgba(255,255,255,.92);font-family:var(--mono);font-size:10px;margin-top:4px;font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;padding:7px 12px;border-radius:6px;
+  border:1px solid rgba(255,255,255,.58);color:rgba(255,255,255,.94);white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;background:rgba(0,0,0,.24)}
+.pill.live{border-color:rgba(208,223,0,.70);color:var(--lime-bright);background:rgba(0,0,0,.24)}
+.pill.demo{border-color:rgba(240,193,94,.70);color:#F3D08A;background:rgba(0,0,0,.24)}
+.pill .dot{width:7px;height:7px;border-radius:1px;background:currentColor;animation:pulse 1.8s steps(1) infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.icon-btn{width:32px;height:32px;min-width:32px;border-radius:8px;border:1px solid rgba(255,255,255,.58);
+  background:rgba(0,0,0,.24);color:#fff;cursor:pointer;display:grid;place-items:center;
+  transition:transform .16s var(--ease-out),background .2s var(--ease-out),border-color .2s var(--ease-out)}
+.icon-btn:hover{background:rgba(0,0,0,.36);border-color:rgba(255,255,255,.85)}
+.icon-btn:active{transform:scale(.94)}
+.icon-btn svg{width:16px;height:16px}
+#btnReload.girando svg{animation:rl-spin .8s linear infinite}
+@keyframes rl-spin{to{transform:rotate(360deg)}}
+/* pestañita discreta de plegado, montada al borde del panel de filtros */
+#railToggle{position:fixed;left:var(--sidebar-w);top:50%;transform:translate(-50%,-50%);z-index:46;
+  width:22px;height:52px;border-radius:11px;border:1px solid var(--line-strong);
+  background:var(--panel);color:var(--muted);cursor:pointer;display:grid;place-items:center;
+  box-shadow:var(--shadow);transition:left .34s var(--ease-io),background .16s var(--ease-out),color .16s var(--ease-out)}
+#railToggle:hover{background:var(--lime);color:var(--on-lime);border-color:var(--lime-dark)}
+#railToggle svg{width:14px;height:14px;transition:transform .3s var(--ease-io)}
+body.rail #railToggle{display:none}  /* plegado: abre la pestaña FILTROS, no este chevron */
+
+@media(max-width:1024px){#railToggle{display:none}}
+.icon-btn[aria-pressed="true"]{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
+#navToggle{display:none}
+.hdr-sep{width:1px;height:30px;background:rgba(255,255,255,.16);margin:0 6px;flex-shrink:0}
+.lipu-logo{height:42px;width:auto;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(0,0,0,.45))}
+@media(max-width:560px){.lipu-logo{height:34px}.hdr-sep{display:none}}
+
+/* layout */
+.layout{display:flex;min-height:calc(100dvh - 72px)}
+aside{width:var(--sidebar-w);flex-shrink:0;padding:var(--sp-5) var(--sp-5) var(--sp-7);
+  border-right:1px solid var(--line);
+  background:var(--panel2);overflow-y:auto;position:sticky;top:72px;max-height:calc(100dvh - 72px)}
+main{flex:1;min-width:0;padding:var(--sp-6) clamp(var(--sp-5),3vw,var(--sp-7)) var(--sp-8)}
+
+/* ---- panel lateral plegable (escritorio) ----------------------------------
+   Sólo se anima el ANCHO del aside: es lo único que reflowea `main` de verdad.
+   El contenido se desvanece antes (140ms) para que no se vea comprimirse
+   mientras la columna se cierra — sin esa asimetría el colapso da tirones.
+   Al terminar la transición, ui.js avisa a las gráficas para que remidan. */
+@media (min-width:1025px){
+  aside{transition:width .3s var(--ease-io),padding .3s var(--ease-io);overflow-x:hidden}
+  aside>*{transition:opacity .14s var(--ease-out) .1s}
+  body.rail aside{width:0;padding-left:0;padding-right:0;border-right-color:transparent;
+    pointer-events:none}
+  body.rail aside>*{opacity:0;transition-delay:0s;visibility:hidden}
+
+  /* ---- ASA DEL PANEL ----------------------------------------------------
+     Sustituye a la pestañita anónima de 22px. Ahora el control ES el borde
+     del panel: una columna de 26px pegada al filo izquierdo de `main`, con
+     el filo lima marcando dónde termina el panel, el icono de dirección y
+     la etiqueta FILTROS en vertical. Se entiende qué hace sin tooltip. */
+  .rail-peek{position:fixed;left:0;top:calc(72px + var(--sp-6));z-index:38;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+    width:26px;height:150px;padding:0;cursor:pointer;
+    border:1px solid var(--line);border-left:0;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+    background:var(--panel2);color:var(--muted);box-shadow:var(--shadow);
+    transform:translateX(-100%);opacity:0;
+    transition:transform .3s var(--ease-io),opacity .18s var(--ease-out),
+               color .16s var(--ease-out),background .16s var(--ease-out),
+               border-color .16s var(--ease-out)}
+  /* el filo lima: marca el borde del panel plegado, no es adorno */
+  .rail-peek::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--lime)}
+  .rail-peek .rp-t{writing-mode:vertical-rl;font:600 8.5px/1 var(--mono);letter-spacing:1.4px;
+    text-transform:uppercase;user-select:none}
+  body.rail .rail-peek{transform:translateX(0);opacity:1;transition-delay:.08s}
+  .rail-peek:hover{color:var(--txt);background:var(--panel-in);border-color:var(--line-strong)}
+  .rail-peek:active{transform:translateX(0) scale(.97)}
+  .rail-peek:focus-visible{outline:2px solid var(--lime-dark);outline-offset:2px;opacity:1;transform:translateX(0)}
+  .rail-peek svg{width:14px;height:14px;--ic-accent:var(--lime-ink)}
+}
+@media (max-width:1024px){ .rail-peek{display:none} }
+/* El botón del header cambia de glifo según el estado (lo hace ui.js/index.js
+   girando el icono): plegado ⇢ apunta a abrir, desplegado ⇠ apunta a cerrar. */
+#railToggle svg{transition:transform .3s var(--ease-io)}
+
+/* Rótulo de sección del panel: la regla de cierre es una HAIRLINE SÓLIDA.
+   El punteado decorativo se retiró de todo el portal. */
+.section-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+  margin:var(--sp-6) 0 var(--sp-3);font-weight:600;display:flex;align-items:center;gap:9px}
+.section-title:first-child{margin-top:0}
+.section-title::after{content:"";flex:1;height:1px;background:var(--line)}
+/* El ordinal es el paso del embudo de filtros, no una viñeta: numeral desnudo,
+   sin caja ni borde de color. */
+.section-title .n{color:var(--lime-text);font:700 10px var(--mono);flex-shrink:0;
+  font-variant-numeric:tabular-nums;letter-spacing:0}
+.section-title .n::after{content:"·";margin-left:6px;color:var(--faint)}
+
+/* panel de filtros: ritmo vertical homogéneo y acciones al fondo */
+aside .section-title{margin:24px 0 10px}
+aside .section-title:first-child{margin-top:2px}
+aside select,aside input[type=date]{width:100%}
+.panel-acciones{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:9px}
+.panel-acciones .btn{margin:0}
+
+/* controles */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--edge);background:var(--panel);color:var(--muted);border-radius:5px;
+  padding:6px 10px;font:500 10.5px var(--mono);letter-spacing:.3px;text-transform:uppercase;cursor:pointer;
+  transition:color .16s var(--ease-out),border-color .16s var(--ease-out),background .16s var(--ease-out),transform .12s var(--ease-out)}
+.chip:hover{border-color:var(--lime-ink);color:var(--txt)}
+.chip:active{transform:scale(.96)}
+.chip.on{background:var(--lime);border-color:var(--lime-dark);color:var(--on-lime);font-weight:600}
+.range-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.range-row label{display:block;font-size:10.5px;font-family:'Roboto Condensed';font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+select,input[type=date],input[type=search]{width:100%;min-height:42px;background:var(--panel);color:var(--txt);border:1px solid var(--edge);
+  border-radius:var(--radius-sm);padding:9px 12px;font-size:13.5px;font-family:inherit;margin-top:5px}
+select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6159' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+:root[data-theme="dark"] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239A9DA3' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+select:focus,input:focus{border-color:var(--lime-ink);box-shadow:0 0 0 3px var(--lime-soft);outline:none}
+:root[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.8)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:42px;
+  background:var(--lime);color:var(--on-lime);border:1px solid var(--lime-dark);border-radius:var(--radius-sm);
+  padding:10px 14px;font-family:var(--cond);font-weight:900;font-size:13px;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;
+  transition:transform .16s var(--ease-out),filter .2s var(--ease-out);box-shadow:0 6px 16px -10px rgba(181,189,0,.8)}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:scale(.975)}
+.btn.ghost{background:var(--panel);color:var(--txt);border-color:var(--edge);box-shadow:none;font-weight:700}
+.btn.ghost:hover{background:var(--panel-in);border-color:var(--lime-ink)}
+.btn svg{width:16px;height:16px}
+.field-note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+.field-note code{background:var(--panel-in);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:10.5px}
+
+/* lista de operadores (navegación principal) */
+.op-search{margin-top:4px}
+.op-list{margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:none}
+/* Selección SIN barrita lateral: el estado activo se lee por relleno, borde
+   completo y peso tipográfico del nombre. */
+.op-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;
+  border:1px solid transparent;background:var(--panel);position:relative;
+  transition:transform .14s var(--ease-out),background .16s var(--ease-out),border-color .16s var(--ease-out)}
+.op-item:hover{background:var(--panel-in);border-color:var(--line);transform:translateX(2px)}
+.op-item.on{background:var(--lime-soft);border-color:var(--lime-dark)}
+.op-item.on .nm{font-weight:800;color:var(--txt)}
+.op-item .sem{width:9px;height:9px;border-radius:1px;flex-shrink:0;box-shadow:0 0 6px -1px currentColor}
+.op-item .nm{flex:1;min-width:0;font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.op-item .ev{font:600 11px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.op-empty{color:var(--muted);font-size:11.5px;padding:12px;text-align:center;font-family:var(--mono)}
+/* la lista dentro de un grupo del acordeón */
+.op-list-in{display:flex;flex-direction:column;gap:3px}
+.op-list .acc-in>*{padding:0 8px 9px}
+.op-list .acc-meta{gap:5px;font-size:9.5px}
+.op-list .acc-k{font-size:12.5px}
+
+/* main */
+.crumb{display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;margin-bottom:var(--gap-bloque)}
+.crumb .rangebox{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;padding:8px 13px;box-shadow:var(--shadow);font-family:var(--mono);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+.crumb .rangebox b{font-weight:600;color:var(--txt)}
+.crumb .rangebox svg{width:14px;height:14px;color:var(--lime-ink)}
+.crumb .grow{flex:1}
+.mini-btn{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:8px 14px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--edge);background:var(--panel);color:var(--txt);font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.4px;
+  transition:border-color .16s var(--ease-out),background .16s var(--ease-out),transform .12s var(--ease-out)}
+.mini-btn:hover{border-color:var(--lime-ink);background:var(--panel-in)}
+.mini-btn:active{transform:scale(.97)}
+.mini-btn svg{width:15px;height:15px}
+.mini-btn.solid{background:var(--lime);border-color:var(--lime-dark);color:var(--on-lime);font-weight:700}
+
+/* Rejilla base de las cards KPI de TODO el portal: mismo mínimo, mismo gutter,
+   misma altura por fila (align-items:stretch + height:100%), mismo padding.
+   El mínimo sube a 186px: por debajo, el número de 30px y el rótulo largo se
+   pisaban en la misma línea. */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));gap:var(--gap-card);
+  margin-bottom:var(--gap-bloque);align-items:stretch}
+/* La jerarquía de la card KPI es TIPOGRÁFICA, no cromática: rótulo mono 9.5px
+   → cifra Condensed 900 de 30px (ratio 3.1×) → nota 9px. No hay franja lateral,
+   no hay borde de estado: el estado lo llevan el color de la cifra y el acento
+   del icono, que son el dato mismo. */
+.tile{background:var(--tile-bg,var(--panel));border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--pad-kpi);
+  box-shadow:var(--shadow);position:relative;height:100%;display:flex;flex-direction:column;
+  transition:box-shadow .22s var(--ease-out),border-color .22s var(--ease-out),transform .22s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+  .tile:hover{box-shadow:var(--shadow-lg);border-color:var(--line-strong);transform:translateY(-2px)}
+}
+.tile .ic{display:inline-flex;width:26px;height:26px;margin-bottom:var(--sp-3);--ic-accent:var(--lime-ink)}
+.tile .ic svg{width:24px;height:24px;overflow:visible}
+.dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* dentro de una card gris el trazo estructural necesita la escala del tile */
+.tile .dash-icon-main{stroke:var(--tile-muted,var(--muted))}
+:root[data-theme="dark"] .tile .ic{--ic-accent:var(--lime)}
+/* .v y .k se anclan al fondo de la card para que la línea base de los números
+   quede alineada entre cards de distinta altura de contenido */
+.tile .v{font-family:var(--cond);font-size:31px;font-weight:900;line-height:.95;letter-spacing:-.5px;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1,"lnum" 1;margin-top:auto;
+  color:var(--val,var(--tile-txt,var(--txt)))}
+.tile .v small{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--tile-muted,var(--muted));letter-spacing:0}
+.tile .k{font-family:var(--mono);font-size:9.5px;color:var(--tile-muted,var(--muted));text-transform:uppercase;letter-spacing:.7px;font-weight:500;margin-top:7px}
+.tile .d{font-family:var(--mono);font-size:9px;color:var(--tile-faint,var(--faint));margin-top:3px;letter-spacing:.3px;text-transform:uppercase}
+
+/* Rejilla de contenido. `align-items:stretch` + `height:100%` en la card: dos
+   cards de la misma fila terminan a la misma altura pase lo que pase con su
+   contenido, que es de donde venían los solapamientos al reflow. */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gap-card);align-items:stretch}
+.grid>.card{height:100%;display:flex;flex-direction:column}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--pad-card);box-shadow:var(--shadow);min-width:0;position:relative;
+  transition:box-shadow .24s var(--ease-out),border-color .24s var(--ease-out),transform .24s var(--ease-out)}
+/* Elevación + GLOW LIME NEÓN: al pasar el cursor sobre cualquier contenedor de
+   información, se eleva y se enciende con un halo lima para saber que estás sobre él. */
+@media (hover:hover) and (pointer:fine){
+  .card:hover,[data-graf]:hover,.pan-kpi:hover,.tile:hover,.m3op-kpi:hover,.cf-kpi:hover,.m1-kpi:hover,.m4-ukpi:hover{
+    transform:translateY(-3px);border-color:var(--lime);
+    box-shadow:var(--shadow-lg), 0 0 0 1px var(--lime), 0 0 18px -2px color-mix(in srgb,var(--lime) 70%,transparent)}
+}
+[data-graf],.pan-kpi,.tile,.m3op-kpi,.cf-kpi,.m1-kpi,.m4-ukpi{
+  transition:box-shadow .24s var(--ease-out),border-color .24s var(--ease-out),transform .24s var(--ease-out)}
+@media (prefers-reduced-motion:reduce){
+  .card,[data-graf],.pan-kpi,.tile,.m3op-kpi,.cf-kpi,.m1-kpi,.m4-ukpi{transition:box-shadow .2s ease,border-color .2s ease}
+  .card:hover,[data-graf]:hover,.pan-kpi:hover,.tile:hover,.m3op-kpi:hover,.cf-kpi:hover,.m1-kpi:hover,.m4-ukpi:hover{transform:none}
+}
+/* Título de card SIN barra lima. La jerarquía la dan el peso (900), la caja
+   alta condensada y el aire de abajo; la pista va en mono, dos pasos por
+   debajo en tamaño y en color. */
+.card h3{margin:0 0 var(--sp-2);font-size:16px;font-weight:900;letter-spacing:.3px;
+  text-transform:uppercase;line-height:1.15;display:flex;align-items:center;gap:9px}
+.card .hint{color:var(--muted);font-family:var(--mono);font-size:10px;margin:0 0 var(--sp-4);
+  line-height:1.65;letter-spacing:.2px;max-width:78ch}
+.card>.chart-lienzo:last-child,.card>div:last-child{margin-bottom:0}
+.chart{width:100%;height:320px}
+.chart.tall{height:400px}
+/* lienzo medido por UIX al expandir la card a primer plano; ECharts se
+   redimensiona de verdad (recalcula ejes y etiquetas), no se escala */
+.chart-lienzo{display:block;min-width:0}
+.gx-abierto .chart-lienzo{display:flex;min-height:240px}
+.gx-abierto .chart-lienzo>.chart{height:100%}
+.col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-7{grid-column:span 7}
+.col-6{grid-column:span 6}.col-5{grid-column:span 5}.col-4{grid-column:span 4}
+
+/* semáforo — chips de estado SÓLIDOS: fondo pleno + tinta AA sobre él.
+   El tinte acuoso quedó reservado a fondos de fila; la señal puntual grita. */
+.sembadge{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:5px;font:700 11px var(--mono);letter-spacing:.4px;text-transform:uppercase;border:1px solid transparent}
+.sem-ok{color:var(--sem-ok-on);background:var(--sem-ok-solid)}
+.sem-warn{color:var(--sem-warn-on);background:var(--sem-warn-solid)}
+.sem-high{color:var(--sem-high-on);background:var(--sem-high-solid)}
+.sem-bad{color:var(--sem-bad-on);background:var(--sem-bad-solid)}
+.dot-ok{background:var(--sem-ok);color:var(--sem-ok)}.dot-warn{background:var(--sem-warn);color:var(--sem-warn)}.dot-high{background:var(--sem-high);color:var(--sem-high)}.dot-bad{background:var(--sem-bad);color:var(--sem-bad)}
+
+/* verdict card */
+.verdict{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:var(--radius);border:1px solid var(--line);background:var(--panel-in)}
+.verdict .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;font-size:22px}
+.verdict .txt b{font:900 15px 'Roboto Condensed'}
+.verdict .txt p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+
+table.mini{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+table.mini th,table.mini td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.mini th{color:var(--faint);font-family:var(--mono);font-weight:600;font-size:9.5px;text-transform:uppercase;
+  letter-spacing:.5px;position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--lime);cursor:pointer;user-select:none}
+table.mini td.num,table.mini th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.mini td{font-size:12px}
+table.mini tbody tr{transition:background .14s var(--ease-out);cursor:pointer}
+table.mini tbody tr:hover{background:var(--lime-soft)}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:700;font-family:var(--mono);font-variant-numeric:tabular-nums;border:1px solid transparent}
+.badge.g{background:var(--sem-ok-solid);color:var(--sem-ok-on)}
+.badge.y{background:var(--sem-warn-solid);color:var(--sem-warn-on)}
+.badge.o{background:var(--sem-high-solid);color:var(--sem-high-on)}
+.badge.r{background:var(--sem-bad-solid);color:var(--sem-bad-on)}
+
+.empty{color:var(--muted);text-align:center;padding:60px 20px;max-width:520px;margin:0 auto}
+.empty .emoji{width:60px;height:60px;margin:0 auto 16px;border-radius:18px;background:var(--lime-soft);display:grid;place-items:center;color:var(--lime-ink)}
+.empty .emoji svg{width:30px;height:30px}
+.empty h2{color:var(--txt);font-weight:900;font-size:22px;margin:0 0 8px}
+.empty p{font-size:14px;line-height:1.6}
+.foot{color:var(--faint);font-size:11px;margin-top:20px;line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+.foot b{color:var(--muted)}
+
+.toast{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));right:20px;background:var(--panel);border:1px solid var(--line-strong);
+  color:var(--txt);padding:13px 17px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);font-size:13px;font-weight:500;z-index:70;
+  opacity:0;transform:translateY(12px) scale(.97);transition:opacity .28s var(--ease-out),transform .28s var(--ease-out);
+  max-width:min(360px,calc(100vw - 40px))}
+.toast.show{opacity:1;transform:none}
+
+/* La entrada escalonada (.stagger) y el acordeón viven en aplicacion/ui.css:
+   una sola definición para el portal y para los módulos. */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.reveal{animation:rise .42s var(--ease-out) both}
+.scrim{position:fixed;inset:0;background:rgba(38,40,43,.5);backdrop-filter:blur(2px);z-index:44;opacity:0;pointer-events:none;transition:opacity .28s var(--ease-out)}
+
+/* modal */
+.modal-scrim{position:fixed;inset:0;background:rgba(38,40,43,.55);backdrop-filter:blur(3px);z-index:80;opacity:0;pointer-events:none;transition:opacity .26s var(--ease-out)}
+.modal{position:fixed;z-index:81;left:50%;top:50%;transform:translate(-50%,-48%) scale(.96);opacity:0;pointer-events:none;
+  width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-lg);
+  padding:20px 22px 24px;transition:transform .28s var(--ease-out),opacity .28s var(--ease-out)}
+body.io-open .modal-scrim{opacity:1;pointer-events:auto}
+body.io-open .modal{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+/* el modal de PADRÓN se controla por su clase .on, no por body.io-open */
+body.io-open #padronModal:not(.on),body.io-open #padronScrim:not(.on){opacity:0;pointer-events:none}
+#padronScrim.on{opacity:1;pointer-events:auto}
+#padronModal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.modal-head h3{margin:0;font-size:18px;font-weight:900}
+.modal .sub-h{font-family:'Roboto Condensed';font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--faint);font-weight:900;margin:16px 0 4px}
+.export-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:8px}
+
+/* estado de la fuente de datos (sustituye a la zona de importar archivo) */
+.src-box{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:9px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel)}
+.src-box .ic{display:inline-grid;place-items:center;width:22px;height:22px;flex:0 0 22px;--ic-accent:var(--lime-ink)}
+.src-box .ic svg{width:20px;height:20px}
+.src-txt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.src-txt b{font:900 12px var(--cond);letter-spacing:.4px;text-transform:uppercase;color:var(--txt)}
+.src-txt small{font:500 9.5px var(--mono);letter-spacing:.35px;color:var(--muted);
+  font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src-box.err{border-color:var(--bad-edge);background:var(--bad-tint)}
+.src-box.err .ic{--ic-accent:var(--bad)}
+.src-box.err .src-txt b{color:var(--bad)}
+
+/* ---- navegación de módulos (Fase 2) ---- */
+/* ---- NAVEGACIÓN DE MÓDULOS ------------------------------------------------
+   Sin ordinales. Cada módulo lleva su propio icono de dos tonos del registro
+   ICONOS (aplicacion/iconos.js), del mismo sistema que el resto del portal.
+   · NO seleccionado — el icono va en LIMA con un realce propio: pastilla de
+     lima al 12% y un anillo de 1px, para que la fila de iconos se lea como
+     una serie viva y no como grises apagados.
+   · SELECCIONADO — la pastilla lima pasa al botón entero; dentro de ella el
+     icono se vuelve tinta oscura, que sobre lima es el máximo contraste.
+   -------------------------------------------------------------------------- */
+.modtabs{display:flex;gap:var(--sp-1);flex-wrap:wrap;margin:0 0 var(--gap-bloque);padding:var(--sp-1);
+  background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);position:sticky;top:74px;z-index:30}
+.modtabs button{flex:1 1 auto;min-height:44px;padding:8px var(--sp-3);border-radius:var(--radius-sm);
+  border:1px solid transparent;
+  background:transparent;color:var(--muted);font:600 10.5px var(--mono);letter-spacing:.5px;text-transform:uppercase;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;
+  transition:color .16s var(--ease-out),background .16s var(--ease-out),
+             border-color .16s var(--ease-out),transform .12s var(--ease-out),box-shadow .2s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+  .modtabs button:hover{color:var(--txt);background:var(--panel)}
+  .modtabs button:hover .tic .dash-icon-main{stroke:var(--lime)}
+}
+.modtabs button:active{transform:scale(.97)}
+.modtabs button:focus-visible{outline:2px solid var(--lime-dark);outline-offset:2px}
+
+/* pastilla del icono en estado NO seleccionado */
+.modtabs button .tic{display:inline-grid;place-items:center;width:22px;height:22px;flex:0 0 22px;
+  background:none;border:0;--ic-accent:var(--lime-dark)}
+.modtabs button .tic svg{width:19px;height:19px;overflow:visible}
+.modtabs button .tic .dash-icon-main{stroke:var(--lime-dark);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.modtabs button .tic .dash-icon-accent{stroke:var(--gray);fill:none;stroke-linecap:round;stroke-linejoin:round}
+:root[data-theme="dark"] .modtabs button .tic .dash-icon-main{stroke:var(--lime)}
+:root[data-theme="dark"] .modtabs button .tic .dash-icon-accent{stroke:#fff}
+
+.modtabs button.on{background:var(--lime);border-color:var(--lime-dark);color:var(--on-lime);font-weight:700;
+  box-shadow:0 8px 18px -10px rgba(181,189,0,.85)}
+/* dentro de la pastilla lima el icono pierde la suya y se vuelve tinta */
+.modtabs button.on .tic{background:none;border:0}
+.modtabs button.on .tic .dash-icon-main{stroke:var(--on-lime)}
+.modtabs button.on .tic .dash-icon-accent{stroke:rgba(20,21,9,.55)}
+.mod-slot{min-width:0}
+/* filtros globales (sidebar) */
+.gf-hint{font-size:10.5px;color:var(--faint);font-family:var(--mono);margin-top:5px;letter-spacing:.2px;line-height:1.5}
+details.gf-ext{margin-top:9px}
+details.gf-ext summary{cursor:pointer;font:600 10px var(--mono);color:var(--muted);text-transform:uppercase;
+  letter-spacing:.6px;user-select:none;padding:4px 0}
+details.gf-ext summary:hover{color:var(--txt)}
+@media(max-width:1024px){.modtabs{position:static}}
+
+@media(max-width:1180px){.col-8,.col-7,.col-5,.col-4{grid-column:span 12}}
+@media(max-width:920px){.col-6{grid-column:span 12}}
+/* Pantallas anchas: el aire crece con el lienzo en vez de dejar una franja
+   muerta a la derecha; el contenido se topa a 1760px para no estirar tablas. */
+@media(min-width:1600px){
+  main{padding-left:var(--sp-8);padding-right:var(--sp-8)}
+  main>*{max-width:1760px;margin-inline:auto}
+  :root{--gap-card:32px;--gap-bloque:42px}
+}
+@media(max-width:1024px){
+  #navToggle{display:grid}
+  .layout{display:block}
+  aside{position:fixed;top:0;left:0;bottom:0;width:min(360px,90vw);max-height:none;z-index:45;
+    padding-top:max(16px,env(safe-area-inset-top));box-shadow:var(--shadow-lg);
+    transform:translateX(-102%);transition:transform .34s var(--ease-io)}
+  body.nav-open aside{transform:none}
+  body.nav-open .scrim{opacity:1;pointer-events:auto}
+  main{padding:var(--sp-5) clamp(var(--sp-4),4vw,var(--sp-5)) var(--sp-7)}
+  .chart{height:280px}.chart.tall{height:340px}
+}
+/* Tableta y móvil: la escala baja UN escalón, no se colapsa. Un dashboard con
+   padding de 8px es lo que el cliente llamó "márgenes pobres". */
+@media(max-width:1024px){
+  :root{--gap-card:20px;--gap-bloque:34px;
+        --pad-card:18px 18px;--pad-kpi:16px 16px}
+}
+/* ---- encabezado en pantallas estrechas ----
+   El header es una sola fila sin envolver: cada elemento que no cabe empuja el
+   ancho del documento y aparece scroll horizontal. Se van retirando por orden
+   inverso de necesidad, y ninguno de los que se ocultan es la única vía al dato:
+   el periodo se repite en .crumb y el origen en el panel lateral. */
+@media(max-width:1024px){
+  #railToggle{display:none}        /* en modo cajón el plegado no aplica */
+}
+@media(max-width:900px){
+  #rangePill{display:none}         /* el periodo ya vive en .crumb */
+}
+@media(max-width:720px){
+  #srcPill{display:none}           /* el origen ya vive en el panel lateral */
+  header.app-header{gap:10px;padding-left:12px;padding-right:12px}
+  header.app-header h1{font-size:15px}
+  /* el bloque de título es lo único elástico: sin min-width:0 no puede
+     encoger y es él quien empuja el ancho del documento */
+  header.app-header>div:not(.auth-chip){min-width:0}
+  header.app-header h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media(max-width:560px){
+  .tiles{grid-template-columns:repeat(2,1fr);gap:10px}
+  .tile .v{font-size:23px}
+  header.app-header .sub{display:none}
+  .export-grid{grid-template-columns:1fr}
+  .acc-t{padding:9px 10px;flex-wrap:wrap;row-gap:5px}
+  .acc-meta{margin-left:26px;width:100%;flex-wrap:wrap}
+  tr.acc-tr .acc-t{flex-wrap:wrap}
+}
+/* Movimiento reducido: se elimina TODO desplazamiento y escalado, y se conservan
+   las transiciones de color/opacidad, que sí ayudan a comprender el cambio de
+   estado (criterio de la guía de accesibilidad, no un apagado total). */
+@media (prefers-reduced-motion:reduce){
+  /* Barrido global: cubre también las transiciones declaradas en los CSS de
+     módulo (m3operacion, rankings, score-seguridad, usuarios), que no tienen
+     su propio bloque reduced-motion. El estado final se conserva siempre;
+     lo único que se elimina es el recorrido animado hacia él. */
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;transition-delay:0s!important;
+    scroll-behavior:auto!important}
+  .stagger>*,.reveal{opacity:1!important;animation:none!important;transform:none!important}
+  .tile:hover,.chip:active,.btn:active,.mini-btn:active,.icon-btn:active,.op-item:hover{transform:none!important}
+  /* el toast conserva un fundido corto: sin él, aparece y desaparece de golpe */
+  .toast{transition:opacity .2s linear!important;transition-duration:.2s!important}
+  .toast.show{transform:none}
+  aside,.rail-peek{transition:none!important}
+  .pill .dot{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PANTALLA DE ACCESO (docs/AUTH.md). La controla aplicacion/auth/auth.js:
+     se muestra mientras no haya sesión válida en /auth-me.
+     ============================================================ -->
+<div class="auth-gate" id="authGate" hidden role="dialog" aria-modal="true" aria-label="Acceso al portal">
+  <div class="auth-card">
+
+    <section class="auth-brand">
+      <img class="lipu" src="img/lipu-lime.svg" alt="LIPU by Traxión">
+      <div class="auth-kicker">Cerebro operativo · Traffilog</div>
+      <h1>Evaluación de<br>Conductores</h1>
+      <p class="auth-lead">Telemetría de flota convertida en score de seguridad, cargas de trabajo,
+        diagnóstico de unidad y rankings por UDN y cliente.</p>
+      <div class="auth-signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="auth-spec">
+        <div><span class="k">Cuenta</span><span class="v">Regional · 3 UDN</span></div>
+        <div><span class="k">Fórmula score</span><span class="v">50 / 25 / 5 · x100h</span></div>
+        <div><span class="k">Sesión</span><span class="v">12 h · cookie firmada</span></div>
+      </div>
+    </section>
+
+    <section class="auth-form">
+      <div class="auth-boot" id="authBoot">
+        <span class="auth-signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        Comprobando sesión…
+      </div>
+
+      <div id="authFormWrap" hidden>
+        <h2>Acceso al portal</h2>
+        <p class="auth-sub">Identifícate para continuar</p>
+
+        <div class="auth-msg" id="authMsg" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <span></span>
+        </div>
+
+        <form id="authForm" autocomplete="on" novalidate>
+          <div class="auth-field">
+            <label for="authUser">Usuario</label>
+            <div class="auth-input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3.128a4 4 0 010 7.744M22 21v-2a4 4 0 00-3-3.87M13 7a4 4 0 11-8 0 4 4 0 018 0zM17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/></svg>
+              <input id="authUser" name="username" type="text" autocomplete="username"
+                     placeholder="usuario" spellcheck="false" autocapitalize="off" required>
+            </div>
+          </div>
+
+          <div class="auth-field" style="margin-top:14px">
+            <label for="authPass">Contraseña</label>
+            <div class="auth-input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input id="authPass" name="password" type="password" autocomplete="current-password"
+                     placeholder="••••••••••" required>
+              <button type="button" class="auth-ver" id="authVer" aria-label="Mostrar contraseña">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn" id="authSubmit" style="margin-top:18px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M13 3H6a2 2 0 00-2 2v14a2 2 0 002 2h7"/></svg>
+            Entrar
+          </button>
+        </form>
+      </div>
+
+      <div class="auth-foot">
+        <span>TRAXION · LIPU</span>
+        <span>Acceso restringido</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<header class="app-header">
+  <button class="icon-btn" id="navToggle" aria-label="Abrir panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <img class="lipu-logo" src="img/lipu-lime.svg" alt="LIPU by Traxión">
+  <span class="hdr-sep"></span>
+  <div>
+    <h1>Evaluación de Conductores</h1>
+    <div class="sub">Análisis de eventos por operador</div>
+  </div>
+  <div class="spacer"></div>
+  <span class="pill" id="srcPill">Sin datos</span>
+  <!-- MONITOR VIVO (solo local): alertas de temperatura/pánico casi en tiempo real
+       vía el servidor local (get_incremental_events cada 2 min). En producción el
+       endpoint no existe y el chip se oculta solo. -->
+  <button class="btn-monitor" id="btnMonitor" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 10-4 0v9.76a4 4 0 104 0z"/><path d="M12 18a1 1 0 100-2 1 1 0 000 2z"/></svg>
+    <span>Temp</span><b id="monitorN">0</b>
+  </button>
+  <style>
+    .btn-monitor{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);
+      background:var(--panel);color:var(--muted);font:700 10px var(--mono);letter-spacing:.8px;
+      text-transform:uppercase;border-radius:8px;padding:8px 11px;cursor:pointer;white-space:nowrap;
+      transition:all .16s var(--ease-out)}
+    .btn-monitor svg{width:14px;height:14px}
+    .btn-monitor b{font-size:11px}
+    .btn-monitor.hay{background:var(--sem-bad-solid,#D93F37);border-color:var(--sem-bad-solid,#D93F37);color:#fff;
+      animation:monPulso 1.6s ease-in-out infinite}
+    .btn-monitor.pausa{opacity:.65}
+    @keyframes monPulso{0%,100%{box-shadow:0 0 0 0 rgba(217,63,55,.45)}50%{box-shadow:0 0 0 6px rgba(217,63,55,0)}}
+    @media (prefers-reduced-motion:reduce){.btn-monitor.hay{animation:none}}
+  </style>
+  <!-- Botón "Día vencido" RETIRADO a pedido del cliente 2026-07-28 (el corte a día
+       vencido ya lo da el filtro de Periodo; el refresco corre solo a las 9:00 y
+       sigue disponible vía POST /api/refrescar). El JS que lo cableaba se
+       auto-desactiva si el botón no existe. Para restaurar: descomentar.
+  <button class="btn-vencido" id="btnDiaVencido" title="Trae de Traffilog la semana en curso hasta AYER (día vencido), la enriquece y recarga el portal. Corre solo a las 9:00; este botón es el manual.">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M12 15v3m0 0l-2-2m2 2l2-2"/></svg>
+    <span>Día vencido</span>
+  </button> -->
+  <style>
+    .btn-vencido{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--lime-dark);
+      background:var(--lime);color:var(--on-lime);font:700 10px var(--mono);letter-spacing:.8px;
+      text-transform:uppercase;border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap;
+      transition:background .16s var(--ease-out),transform .16s}
+    .btn-vencido svg{width:15px;height:15px}
+    .btn-vencido:hover:not(:disabled){background:var(--lime-bright);transform:translateY(-1px)}
+    .btn-vencido:disabled{opacity:.75;cursor:progress}
+    .btn-vencido.err{background:var(--sem-bad-solid);border-color:var(--sem-bad-solid);color:var(--sem-bad-on)}
+  </style>
+  <button class="icon-btn" id="btnReload" aria-label="Recargar datos de Traffilog" title="Recargar datos · revive la sesión con Traffilog">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg>
+  </button>
+  <div class="auth-chip" id="authChip" hidden>
+    <span class="ini" id="authIni">··</span>
+    <span class="txt"><b id="authNombre">—</b><small id="authRol">—</small></span>
+  </div>
+  <button class="icon-btn" id="authLogout" hidden aria-label="Cerrar sesión" title="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M13 3H6a2 2 0 00-2 2v14a2 2 0 002 2h7"/></svg></button>
+  <button class="icon-btn" id="themeBtn" aria-label="Tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></button>
+</header>
+
+<button id="railToggle" aria-pressed="false" aria-label="Ocultar el panel de filtros" title="Ocultar filtros · atajo: [">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 7L9.5 12l5 5"/></svg>
+</button>
+<div class="scrim" id="scrim"></div>
+
+<!-- pestaña de retorno cuando el panel está plegado (solo escritorio) -->
+<button class="rail-peek" id="railPeek" aria-label="Mostrar el panel de filtros" title="Mostrar el panel de filtros  ·  atajo: [" tabindex="-1">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path class="dash-icon-accent" d="M9.4 5.6L16 12l-6.6 6.4" stroke-width="2.4"/></svg>
+  <span class="rp-t">Filtros</span>
+</button>
+
+<div class="layout">
+  <aside id="sidebar">
+    <!-- BLOQUE COMÚN — visible en TODOS los módulos. Aquí sólo vive la fuente
+         de datos y la exportación; los filtros son los 8 globales de abajo,
+         iguales para Evaluación y para el resto de módulos (petición 5). -->
+    <!-- FILTROS JERÁRQUICOS GLOBALES (PLAN_MAESTRO §2) — alimentan los módulos -->
+    <div id="panelFiltros" style="display:none">
+      <div class="section-title"><span class="n">1</span> Unidad de negocio</div>
+      <select id="gfUdn"><option value="">Todas las UDN</option></select>
+
+      <div class="section-title"><span class="n">2</span> Cliente</div>
+      <select id="gfCliente"><option value="">Todos los clientes</option></select>
+
+      <div class="section-title"><span class="n">3</span> Operador</div>
+      <select id="gfOperador"><option value="">Todos los operadores</option></select>
+
+      <div class="section-title"><span class="n">4</span> Vehículo</div>
+      <select id="gfVehiculo"><option value="">Todas las unidades</option></select>
+
+      <div class="section-title"><span class="n">5</span> Eventos / subcategorías</div>
+      <div class="chips" id="gfEventos"></div>
+      <details class="gf-ext"><summary>Telemetría extendida…</summary>
+        <div class="chips" id="gfEventosExt" style="margin-top:8px"></div>
+      </details>
+      <div class="gf-hint">Sin selección = todas. Un subconjunto marca el score como parcial.</div>
+
+      <div class="section-title"><span class="n">6</span> Fechas</div>
+      <div class="range-row" style="margin-top:0">
+        <label>Desde<input type="date" id="gfDesde"></label>
+        <label>Hasta<input type="date" id="gfHasta"></label>
+      </div>
+
+      <div class="section-title"><span class="n">7</span> Periodo</div>
+      <div class="chips" id="gfPeriodoModo">
+        <button class="chip" data-modo="semana">Semana</button>
+        <button class="chip" data-modo="mes">Mes</button>
+      </div>
+      <select id="gfPeriodoSel" class="gf-select" multiple size="7" aria-label="Periodo a mostrar (multiselección)"></select>
+      <div class="gf-hint" id="gfPeriodoHint">Por defecto: la semana en curso a día vencido (hasta ayer).</div>
+      <div class="gf-hint">Ctrl/Cmd+clic (o clic y arrastre) para varias: el portal muestra el <b>acumulado</b> de lo seleccionado.</div>
+      <style>
+        .gf-select{width:100%;margin-top:6px;font:700 10.5px var(--mono);letter-spacing:.3px;color:var(--txt);
+          background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;cursor:pointer}
+        /* La flecha del <select> es un background-image en la regla global; en
+           un multiple se repetiría detrás de CADA opción. Aquí no hay flecha. */
+        .gf-select[multiple]{height:auto;max-height:170px;overflow-y:auto;padding:5px 6px;
+          background-image:none;appearance:none}
+        :root[data-theme="dark"] .gf-select[multiple]{background-image:none}
+        .gf-select[multiple] option{padding:4px 7px;border-radius:5px;background:var(--panel);color:var(--txt)}
+        .gf-select[multiple] option:checked{background:var(--lime);color:var(--on-lime)}
+        .gf-select:focus-visible{outline:2px solid var(--lime-dark);outline-offset:1px}
+      </style>
+
+      <div id="panelDatos" class="panel-acciones">
+        <button class="btn" id="btnIO"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>Exportar la consulta…</button>
+        <button class="btn ghost" id="btnPadron" title="Sumar la base de datos de unidades y operadores desde un Excel/CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 12l-4-4m4 4l4-4M4 9V5a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>Importar padrón…</button>
+        <input type="file" id="filePadron" accept=".xlsx,.xls,.csv" hidden>
+        <button class="btn ghost" id="gfLimpiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Limpiar filtros</button>
+      </div>
+
+      <div class="foot">Los <b>7 filtros jerárquicos</b> re-agregan los <b>registros</b> (operador × unidad × día)
+      y recalculan cada score con su fórmula exacta — nunca se promedian scores.</div>
+    </div>
+  </aside>
+
+  <main>
+    <nav class="modtabs" id="modTabs" aria-label="Módulos del portal">
+      <!-- El icono lo inyecta el arranque desde ICONOS (data-ic). Nada de
+           ordinales: cada módulo se reconoce por su símbolo. -->
+      <button data-tab="panorama" class="on" data-ic="panorama">Panorama</button>
+      <!-- El tab "Evaluación" ahora es el módulo HÁBITOS (aplicacion/modulos/habitos.js):
+           snapshot v2, multi-UDN y reactivo a los chips de eventos. La vista legacy
+           inline (fleetView/opView) queda dormida hasta retirarla. -->
+      <button data-tab="habitos" data-ic="evaluacion">Evaluación</button>
+      <button data-tab="score-seguridad" data-ic="seguridad">Seguridad</button>
+      <button data-tab="cargas" data-ic="cargasFatiga">Cargas · Fatiga</button>
+      <button data-tab="escuela" data-ic="operadores">Escuela</button>
+      <button data-tab="m3operacion" data-ic="operacion">Operación</button>
+      <!-- Combustible REACTIVADO 2026-08-12: se ocultó el 2026-07-28 ("no nos sirve
+           por el momento, luego lo replanteamos") porque solo CONTABA caídas sin
+           magnitud. Ya hay 340 caídas con Δ% medido del tanque, umbral recalibrado
+           a 20% y ranking de unidades por tanque sustraído — el replanteamiento.
+           Mapa sigue oculto (para reactivar: descomentar aquí, su mod-slot y su script). -->
+      <button data-tab="combustible" data-ic="combustible">Combustible</button>
+      <!-- <button data-tab="mapa" data-ic="panorama">Mapa</button> -->
+      <button data-tab="rankings" data-ic="rankings">Rankings</button>
+      <button data-tab="cerebro" data-ic="cerebro">Cerebro Operativo</button>
+      <button data-tab="alertas" data-ic="aviso">Alertas</button>
+      <!-- solo visible para rol super/admin (lo decide aplicacion/auth/auth.js) -->
+      <button data-tab="usuarios" id="tabUsuarios" hidden data-ic="usuarios">Usuarios</button>
+    </nav>
+
+    <div id="emptyState" class="empty reveal">
+      <div class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3.128a4 4 0 010 7.744M22 21v-2a4 4 0 00-3-3.87M13 7a4 4 0 11-8 0 4 4 0 018 0zM17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/></svg></div>
+      <h2>Cargando el histórico</h2>
+      <p>Los datos vienen del histórico de Traffilog. Si no aparecen, pulsa <b>“Actualizar histórico”</b>
+      en el panel lateral. Luego elige un operador para su análisis completo.</p>
+    </div>
+
+    <!-- VISTA FLOTA -->
+    <div id="fleetView" style="display:none">
+      <div class="crumb">
+        <span class="rangebox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Periodo: <b id="rangeText">—</b></span></span>
+        <span class="grow"></span>
+        <button class="mini-btn solid" id="btnExportTop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>Exportar</button>
+      </div>
+      <div class="tiles stagger" id="fleetTiles"></div>
+      <div class="grid">
+        <div class="card col-7" data-graf="Operadores por eventos/hora (EV/H)"><h3>Operadores por eventos/hora (EV/H)</h3>
+          <p class="hint">Normalizado por horas de manejo. <span class="badge g">≤3 óptimo</span> · <span class="badge y">3–8</span> · <span class="badge o">8–15</span> · <span class="badge r">&gt;15 crítico</span></p>
+          <div class="chart-lienzo" data-graf-lienzo><div id="chFleetEvh" class="chart tall"></div></div></div>
+        <div class="card col-5" data-graf="Distribución de eventos por tipo"><h3>Distribución de eventos por tipo</h3>
+          <p class="hint">Participación de cada subcategoría en el total de la flota.</p>
+          <div class="chart-lienzo" data-graf-lienzo><div id="chFleetType" class="chart tall"></div></div></div>
+        <div class="card col-12"><h3>Resumen ejecutivo — clic en un operador para su detalle</h3>
+          <p class="hint">Ranking <b>del peor al mejor</b> por EV/Hora (los operadores sin horas medidas van al final). EV/H y EV/10KM normalizan por exposición.</p>
+          <div style="overflow-x:auto"><table class="mini" id="tblFleet"></table></div></div>
+      </div>
+    </div>
+
+    <!-- VISTA OPERADOR -->
+    <div id="opView" style="display:none">
+      <div class="crumb">
+        <button class="mini-btn" id="btnBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Flota</button>
+        <span class="rangebox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Periodo: <b id="rangeText2">—</b></span></span>
+        <span class="grow"></span>
+        <button class="mini-btn solid" id="btnExportOp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>Exportar operador</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <h2 style="margin:0;font:900 22px 'Roboto Condensed'" id="opName">—</h2>
+        <span id="opGroup" class="pill" style="border-color:var(--line-strong);color:var(--muted)"></span>
+        <span id="opSem" class="sembadge"></span>
+      </div>
+      <div class="tiles stagger" id="opTiles"></div>
+      <div class="grid">
+        <div class="card col-8" data-graf="Tendencia diaria — EV/Hora y EV/10KM"><h3>Tendencia diaria — EV/Hora y EV/10KM</h3>
+          <p class="hint">Cómo evoluciona el desempeño día a día (líneas), con eventos por día (barras). S/D = sin telemetría suficiente.</p>
+          <div class="chart-lienzo" data-graf-lienzo><div id="chOpTrend" class="chart tall"></div></div></div>
+        <div class="card col-4" data-graf="Factor por tipo de evento (EV/10KM)"><h3>Factor por tipo de evento (EV/10KM)</h3>
+          <p class="hint">Cuántos eventos de cada tipo por cada 10 km recorridos.</p>
+          <div class="chart-lienzo" data-graf-lienzo><div id="chOpFactor" class="chart tall"></div></div></div>
+        <div class="card col-6" data-graf="Evaluación de mejora"><h3>Evaluación de mejora</h3>
+          <p class="hint">1ª mitad vs 2ª mitad del periodo en EV/Hora — elimina sesgo de días con distinto manejo.</p>
+          <div id="opVerdict"></div>
+          <div class="chart-lienzo" data-graf-lienzo style="margin-top:8px"><div id="chOpImprove" class="chart" style="height:170px"></div></div></div>
+        <div class="card col-6" data-graf="Eventos por día y categoría"><h3>Eventos por día y categoría</h3>
+          <p class="hint">Desglose apilado por subcategoría.</p>
+          <div class="chart-lienzo" data-graf-lienzo><div id="chOpStack" class="chart"></div></div></div>
+        <div class="card col-12"><h3>Análisis diario correlacionado</h3>
+          <p class="hint">Horas + KM + eventos por subcategoría + factores por día.</p>
+          <div style="overflow-x:auto"><table class="mini" id="tblOpDaily"></table></div></div>
+      </div>
+    </div>
+
+    <!-- VISTA MÓDULOS (Fase 2) -->
+    <div id="moduloView" style="display:none">
+      <div id="modNoData" class="empty" style="display:none">
+        <div class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></div>
+        <h2>Sin snapshot de datos</h2>
+        <p>Los módulos consumen el <b>snapshot v2</b> (registros operador × unidad × día). Vuelve a la pestaña
+        <b>Evaluación</b> y pulsa <b>Actualizar histórico</b>, o recarga la página.</p>
+      </div>
+      <div id="mod-habitos" class="mod-slot" style="display:none"></div>
+      <div id="mod-alertas" class="mod-slot" style="display:none"></div>
+      <div id="mod-panorama" class="mod-slot" style="display:none"></div>
+      <div id="mod-score-seguridad" class="mod-slot" style="display:none"></div>
+      <div id="mod-cargas" class="mod-slot" style="display:none"></div>
+      <div id="mod-escuela" class="mod-slot" style="display:none"></div>
+      <div id="mod-combustible" class="mod-slot" style="display:none"></div>
+      <!-- <div id="mod-mapa" class="mod-slot" style="display:none"></div> -->
+      <div id="mod-m3operacion" class="mod-slot" style="display:none"></div>
+      <div id="mod-rankings" class="mod-slot" style="display:none"></div>
+      <div id="mod-cerebro" class="mod-slot" style="display:none"></div>
+      <div id="mod-usuarios" class="mod-slot" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<!-- modal importar/exportar -->
+<div class="modal-scrim" id="ioScrim"></div>
+<div class="modal" id="ioModal" role="dialog" aria-modal="true">
+  <div class="modal-head"><h3>Exportar la consulta</h3>
+    <button class="icon-btn" id="ioClose" style="border-color:var(--edge);background:var(--panel-in);color:var(--txt)" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="field-note" id="ioResumen">Se exporta exactamente lo que estás viendo.</div>
+  <div class="sub-h">Formato</div>
+  <div class="export-grid">
+    <button class="btn ghost" id="expXlsx" disabled>Excel</button>
+    <button class="btn ghost" id="expCsv" disabled>CSV</button>
+    <button class="btn ghost" id="expJson" disabled>JSON</button>
+  </div>
+  <div class="field-note" style="margin-top:12px">Una fila por operador: eventos por subcategoría,
+  <b>EV/Hora</b>, <b>EV/10KM</b>, km, horas, viajes y días activos del periodo y grupo seleccionados.
+  El Excel añade una segunda hoja con el detalle de eventos.</div>
+</div>
+
+<!-- modal de PREVIEW del padrón importado: nada se aplica sin confirmar -->
+<div class="modal-scrim" id="padronScrim"></div>
+<div class="modal" id="padronModal" role="dialog" aria-modal="true">
+  <div class="modal-head"><h3>Importar padrón</h3>
+    <button class="icon-btn" id="padronClose" style="border-color:var(--edge);background:var(--panel-in);color:var(--txt)" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="field-note" id="padronResumen">—</div>
+  <div class="export-grid" style="margin-top:12px">
+    <button class="btn" id="padronAplicar">Aplicar</button>
+    <button class="btn ghost" id="padronCancelar">Cancelar</button>
+  </div>
+  <div class="field-note" style="margin-top:12px" id="padronNota">El padrón se guarda en este navegador
+  (sobrevive recargas) y se SUMA a lo observado en la telemetría: nada se borra. Los selectores de
+  Operador y Vehículo mostrarán también lo importado.</div>
+  <button class="btn ghost" id="padronQuitar" style="margin-top:10px;display:none">Quitar padrón importado</button>
+</div>
+
+<!-- modal del monitor vivo de temperatura -->
+<div class="modal-scrim" id="monScrim"></div>
+<div class="modal" id="monModal" role="dialog" aria-modal="true" style="max-width:640px">
+  <div class="modal-head"><h3>Monitor vivo — alertas de temperatura</h3>
+    <button class="icon-btn" id="monClose" style="border-color:var(--edge);background:var(--panel-in);color:var(--txt)" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="field-note" id="monEstado">—</div>
+  <div id="monLista" style="max-height:50vh;overflow:auto;margin-top:10px;font-size:12px"></div>
+</div>
+<style>
+  body.io-open #monModal:not(.on),body.io-open #monScrim:not(.on){opacity:0;pointer-events:none}
+  #monScrim.on{opacity:1;pointer-events:auto}
+  #monModal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .mon-fila{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;padding:8px 6px;border-bottom:1px solid var(--hair)}
+  .mon-fila b{font-family:var(--cond,'Roboto Condensed');text-transform:uppercase}
+  .mon-fila .mono{font-size:10px;color:var(--muted)}
+  .mon-sev{align-self:center;font:700 8.5px var(--mono);text-transform:uppercase;border-radius:4px;padding:2px 7px;color:#fff;background:var(--sem-high,#EE8B36)}
+  .mon-sev.high,.mon-sev.critical{background:var(--sem-bad,#D93F37)}
+  /* toast de ALERTA: rojo semáforo, distinto del toast informativo normal */
+  .toast.toast-alerta{background:var(--sem-bad-solid,#D93F37);color:#fff;border-color:var(--sem-bad,#D93F37);
+    font-weight:600;max-width:420px;line-height:1.45}
+  .toast.toast-alerta b{font-family:var(--cond,'Roboto Condensed');text-transform:uppercase}
+</style>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Lector del ARCHIVO HISTÓRICO LOCAL (datos/historico/*.json). Módulo ES: se evalúa
+     DESPUÉS de este documento, así que el script clásico de abajo lo espera con
+     `esperarArchivo()` (el evento 'archivo-listo' se emite al final de archivo.js). -->
+<script type="module" src="aplicacion/archivo.js?v=63"></script>
+
+<!-- Módulos Fase 2: registran window.MODULOS.* (IIFE sin efectos DOM al cargar) -->
+<script src="aplicacion/modulos/habitos.js?v=5"></script>
+<script src="aplicacion/modulos/alertas.js?v=2"></script>
+<script src="aplicacion/modulos/panorama.js?v=67"></script>
+<script src="aplicacion/modulos/score-seguridad.js?v=65"></script>
+<script src="aplicacion/modulos/cargas-fatiga.js?v=67"></script>
+<script src="aplicacion/modulos/m3operacion.js?v=65"></script>
+<script src="aplicacion/modulos/rankings.js?v=66"></script>
+<script src="aplicacion/modulos/escuela.js?v=10"></script>
+<script src="aplicacion/modulos/combustible.js?v=14"></script>
+<!-- <script src="aplicacion/modulos/mapa.js?v=3"></script> -->
+<script src="aplicacion/modulos/cerebro.js?v=67"></script>
+<script src="aplicacion/modulos/usuarios.js?v=62"></script>
+
+<script>
+/* ============================================================
+   Evaluación de Conductores — TRAXION
+   ============================================================ */
+const REDUCED = matchMedia('(prefers-reduced-motion:reduce)').matches;
+/* Paleta categórica. Dos juegos, uno por tema: cada paso está medido a ≥3:1
+   contra su superficie (--panel). No se cicla: la 9ª serie repite a propósito
+   y las gráficas la agrupan en "Otros". */
+/* PALETA CATEGÓRICA — una sola fuente de verdad: los tokens --pal-1..8 del :root.
+   Antes vivía duplicada en tres sitios (aquí, panorama.css y cerebro.js) y con
+   valores distintos en cada uno. Se lee del CSS para que tema claro/oscuro y
+   gráficas no puedan desincronizarse. */
+function pal(){
+  const cs=getComputedStyle(document.documentElement);
+  const p=[];
+  for(let i=1;i<=8;i++){ const v=cs.getPropertyValue('--pal-'+i).trim(); if(v)p.push(v); }
+  return p.length?p:['#8A9000','#4F5B2A','#2F6B5F','#7A6A3C','#63666A','#45505E','#8A5A3C','#6B4A63'];
+}
+let STATE={ trips:[], events:[], drivers:[], range:'—', source:'', hasDates:false, updatedAt:null };
+let PERIOD={ preset:'todo', from:null, to:null };
+let SELECTED=null;   // conductor seleccionado
+let charts={};
+
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function tokens(){ return { axis:cssVar('--muted'), grid:cssVar('--line'), panel:cssVar('--panel'), txt:cssVar('--txt') }; }
+const CFG = Object.assign({ INDICE_URL:'datos/historico/indice.json', SEMANAS_INICIALES:4, REFRESH_MS:0, AUTOCONNECT:true }, window.PORTAL_CONFIG||{});
+
+/* ---- helpers ---- */
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
+function hhmmToHours(v){ if(v==null||v==='')return 0; if(typeof v==='number')return v; const s=String(v).trim();
+  const m=s.match(/^(\d+):(\d{2})(?::(\d{2}))?$/); if(m)return (+m[1])+(+m[2])/60+((+m[3]||0)/3600);
+  const n=parseFloat(s.replace(',','.')); return isNaN(n)?0:n; }
+function hoursToHms(h){ const s=Math.max(0,Math.round(h*3600)); return [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(n=>String(n).padStart(2,'0')).join(':'); }
+function num(v){ if(v==null||v==='')return 0; const n=parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(n)?0:n; }
+function short(s,n=18){ s=String(s||''); return s.length>n?s.slice(0,n-1)+'…':s; }
+function fmt(n,d=0){ return (n||0).toLocaleString('es-MX',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function isoDay(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function parseDate(v){ if(!v)return null; if(v instanceof Date)return isoDay(v); const s=String(v).trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m)return `${m[1]}-${m[2]}-${m[3]}`;
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/); if(m)return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`; return null; }
+
+/* ---- semáforo EV/Hora ---- */
+function semClass(evh){ return evh<=3?'ok':evh<=8?'warn':evh<=15?'high':'bad'; }
+function semLabel(evh){ return evh<=3?'Óptimo':evh<=8?'Mejorable':evh<=15?'Alto':'Crítico'; }
+function semColor(evh){ return cssVar('--'+semClass(evh)); }
+/* Variante para el interior de las cards KPI: en oscuro su fondo es el gris
+   TRAXION #63666A, sobre el que --ok/--warn/--high/--bad no llegan a 3:1.
+   --tile-ok…--tile-bad son la escala calibrada para esa superficie. */
+function semTileColor(evh){ return cssVar('--tile-'+semClass(evh)); }
+
+/* ---- iconos: registro único en aplicacion/iconos.js (cero emojis, cero librerías) ---- */
+function tileIcon(kind,accent){ return ICONOS.ic(kind,{accent:accent}); }
+/* rellena cualquier <span class="ic" data-ico="…"> del marcado estático */
+function pintarIconosEstaticos(raiz){
+  (raiz||document).querySelectorAll('.ic[data-ico]').forEach(el=>{
+    if(el.firstElementChild)return; el.innerHTML=ICONOS.svg(el.dataset.ico); });
+}
+
+/* ---- periodo: lo define el FILTRO 6 (fechas) del panel global ---- */
+/* PETICIÓN 5 — Evaluación ya NO tiene panel propio: el periodo, la UDN, el
+   cliente y el operador salen de los MISMOS 8 filtros globales que alimentan
+   al resto de módulos. PERIOD queda como espejo de solo lectura de FILTROS
+   para no reescribir las decenas de sitios que ya lo consultaban. */
+function sincronizarPeriodo(){
+  PERIOD.from=FILTROS.desde||null; PERIOD.to=FILTROS.hasta||null; PERIOD.preset='global';
+}
+/* Semanas permitidas por los filtros 7 y 8. Vacío = sin restricción semanal. */
+function semanasFiltro(){
+  const s=new Set(FILTROS.semanasComparar||[]);
+  if(FILTROS.semanaActual) s.add(isoWeekOf(new Date()));
+  return s;
+}
+function inPeriod(row){
+  if(!row.fecha)return true;
+  if(PERIOD.from&&row.fecha<PERIOD.from)return false;
+  if(PERIOD.to&&row.fecha>PERIOD.to)return false;
+  const sem=semanasFiltro();
+  if(sem.size&&!sem.has(isoWeekOf(new Date(row.fecha+'T12:00:00'))))return false;
+  return true; }
+function rangeLabel(){
+  const sem=semanasFiltro();
+  if(sem.size) return [...sem].sort().join(' · ');
+  if(!PERIOD.from&&!PERIOD.to) return STATE.hasDates?'Todo el histórico':STATE.range;
+  const f=PERIOD.from?PERIOD.from.split('-').reverse().join('/'):'…'; const tt=PERIOD.to?PERIOD.to.split('-').reverse().join('/'):'…';
+  return f===tt?f:`${f} – ${tt}`; }
+
+/* ---- normalize ---- */
+function pick(row,cands){ const keys=Object.keys(row); for(const c of cands){ const k=keys.find(k=>k.toLowerCase().replace(/\s|_/g,'').includes(c)); if(k!=null)return row[k]; } return undefined; }
+/* `grupo` es el nombre CRUDO del grupo de la API ("YAZAKI COLIMA"): mezcla cliente y plaza.
+   `udn` y `cliente` son la taxonomía ya resuelta por core.splitGrupo() + docs/udn-map.json.
+   No son intercambiables: UDN sólo puede ser Guadalajara, Colima o Lázaro Cárdenas. */
+function normalizeTrips(rows){ return rows.map(r=>({
+  fecha:parseDate(pick(r,['fecha','date','dia'])), conductor:pick(r,['nombredelconductor','conductor','driver','operador'])||'—',
+  grupo:pick(r,['nombredelgrupo','grupo','group'])||'—', udn:r.udn||'', cliente:r.cliente||'',
+  viajes:num(pick(r,['recuentodeviajes','recuento','viajes','trips'])),
+  horas:hhmmToHours(pick(r,['tiemponetodeconduccion','conduccion','horas','hman','driving'])), km:num(pick(r,['distanciaconducida','distancia','km','distance'])),
+})).filter(x=>(x.conductor&&x.conductor!=='—')||x.km||x.horas); }
+function normalizeEvents(rows){ return rows.map(r=>({
+  fecha:parseDate(pick(r,['fecha','date','dia'])), conductor:pick(r,['nombredelconductor','conductor','driver','operador'])||'—',
+  grupo:pick(r,['nombredelgrupo','grupo','group'])||'—', udn:r.udn||'', cliente:r.cliente||'',
+  evento:pick(r,['nombredelevento','evento','categoria','tipo','event'])||'Evento',
+  cantidad:num(pick(r,['recuento','cantidad','count','total']))||1,
+})).filter(x=>x.conductor); }
+
+/* ---- agregación por operador ---- */
+/* Etiqueta del recorte activo — se usa en la exportación y en el modal de IO. */
+function groupFilter(){ return FILTROS.cliente||FILTROS.udn||'__all'; }
+/* Filtro jerárquico global aplicado a una fila de trips/events. */
+function pasaFiltros(r){
+  if(FILTROS.udn&&(r.udn||'')!==FILTROS.udn)return false;
+  if(FILTROS.cliente&&(r.cliente||'')!==FILTROS.cliente)return false;
+  return inPeriod(r);
+}
+function operators(){
+  sincronizarPeriodo();
+  const trips=STATE.trips.filter(pasaFiltros);
+  const events=STATE.events.filter(pasaFiltros);
+  const by={};
+  const ensure=(name,grp,udn,cli)=>{
+    const d=by[name]||(by[name]={conductor:name,grupo:grp||'',udn:udn||'',cliente:cli||'',
+      km:0,horas:0,viajes:0,eventos:0,cats:{},dias:new Set(),daily:{}});
+    if(!d.udn&&udn) d.udn=udn; if(!d.cliente&&cli) d.cliente=cli; if(!d.grupo&&grp) d.grupo=grp;
+    return d; };
+  /* criterio central: "SIN OPERADOR (unidad)" no es una persona — no entra al
+     análisis por conductor (su telemetría vive por unidad y en la pestaña
+     Identificación de operador). */
+  const esFantasma=n=>/^SIN OPERADOR/.test(n||'');
+  trips.forEach(t=>{ if(t.sinIdentificar||esFantasma(t.conductor))return;
+    const d=ensure(t.conductor,t.grupo,t.udn,t.cliente); d.km+=t.km; d.horas+=t.horas; d.viajes+=t.viajes;
+    if(t.fecha){ d.dias.add(t.fecha); const dd=d.daily[t.fecha]||(d.daily[t.fecha]={km:0,horas:0,ev:0,cats:{}}); dd.km+=t.km; dd.horas+=t.horas; } });
+  events.forEach(e=>{ if(e.sinIdentificar||esFantasma(e.conductor))return;
+    const d=ensure(e.conductor,e.grupo,e.udn,e.cliente); d.eventos+=e.cantidad; d.cats[e.evento]=(d.cats[e.evento]||0)+e.cantidad;
+    if(e.fecha){ d.dias.add(e.fecha); const dd=d.daily[e.fecha]||(d.daily[e.fecha]={km:0,horas:0,ev:0,cats:{}}); dd.ev+=e.cantidad; dd.cats[e.evento]=(dd.cats[e.evento]||0)+e.cantidad; } });
+  // roster en vivo: incluir todos los operadores aunque no tengan eventos en el periodo
+  (STATE.drivers||[]).forEach(d=>{
+    if(FILTROS.udn&&(d.udn||'')!==FILTROS.udn)return;
+    if(FILTROS.cliente&&(d.cliente||'')!==FILTROS.cliente)return;
+    ensure(d.conductor,d.grupo,d.udn,d.cliente); });
+  /* ORDEN POR DEFECTO: del MÁS CRÍTICO al MEJOR (petición 3 del cliente).
+     El criterio de criticidad del módulo de Evaluación es EV/Hora — ya está
+     normalizado por exposición, así que compara operadores con distinto manejo.
+     Quien no tiene horas (S/D) no es "el mejor": va al final, después de los
+     que sí tienen medición, ordenado por eventos absolutos. */
+  return Object.values(by).map(d=>{ d.dias=d.dias.size; d.evh=d.horas>0?d.eventos/d.horas:0; d.ev10=d.km>0?d.eventos/d.km*10:0; return d; })
+    .sort((a,b)=>{
+      const ma=a.horas>0, mb=b.horas>0;
+      if(ma!==mb) return ma?-1:1;                 // medibles primero
+      if(ma) return b.evh-a.evh || b.eventos-a.eventos;
+      return b.eventos-a.eventos;
+    });
+}
+function allEventTypes(ops){ const s={}; ops.forEach(o=>Object.entries(o.cats).forEach(([k,v])=>s[k]=(s[k]||0)+v)); return Object.entries(s).sort((a,b)=>b[1]-a[1]).map(x=>x[0]); }
+
+/* ---- charts base ---- */
+function mk(id){ if(charts[id]){charts[id].dispose();} charts[id]=echarts.init(document.getElementById(id),null,{renderer:'canvas'}); return charts[id]; }
+const MONO="'IBM Plex Mono',monospace";
+function axisStyle(){ const t=tokens(); return {axisLine:{lineStyle:{color:t.grid}},axisTick:{show:false},
+  axisLabel:{color:t.axis,fontFamily:MONO,fontSize:10.5},nameTextStyle:{color:t.axis,fontFamily:MONO,fontSize:10},
+  splitLine:{lineStyle:{color:t.grid,type:'dashed'}}}; }
+function tt(x){ const t=tokens(); return Object.assign({backgroundColor:t.panel,borderColor:t.line?t.line:t.grid,borderWidth:1,padding:[8,11],
+  textStyle:{color:t.txt,fontFamily:MONO,fontSize:11.5},extraCssText:'box-shadow:0 14px 34px -14px rgba(0,0,0,.45);border-radius:8px;'},x||{}); }
+const ANIM={animationDuration:REDUCED?0:520,animationEasing:'cubicOut',animationDelay:(i)=>REDUCED?0:i*20};
+const baseGrid={left:8,right:20,top:30,bottom:10,containLabel:true};
+function resizeAll(){ Object.values(charts).forEach(c=>{try{c.resize();}catch(e){}}); }
+let rT; addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(resizeAll,120);});
+
+/* ---- refresh maestro ---- */
+function refresh(){
+  if(ACTIVE_TAB!=='evaluacion'){ renderActiveModule(); return; }   // un módulo Fase 2 está activo
+  const ops=operators();
+  document.getElementById('rangeText').textContent=rangeLabel();
+  document.getElementById('rangeText2').textContent=rangeLabel();
+  const _rp=document.getElementById('rangePill'); if(_rp)_rp.textContent='Periodo: '+rangeLabel();
+  /* el drill-down de operador es el FILTRO 3 global, no una lista aparte */
+  if(FILTROS.operador) SELECTED=FILTROS.operador;
+  if(SELECTED && ops.some(o=>o.conductor===SELECTED)) renderOperator(ops);
+  else { SELECTED=null; renderFleet(ops); }
+  registrarGraficasEval();
+  setTimeout(resizeAll,30);
+}
+
+/* Cada card de gráfica de Evaluación se vuelve expandible a primer plano.
+   Al expandir/restaurar, UIX llama al callback con el tamaño real y ECharts
+   RECALCULA el layout (ejes, etiquetas, leyenda) — no es un zoom de CSS. */
+function registrarGraficasEval(){
+  if(!window.UIX) return;
+  document.querySelectorAll('#fleetView [data-graf],#opView [data-graf]').forEach(host=>{
+    UIX.registrarGrafica(host,()=>{
+      const d=host.querySelector('.chart'); if(!d) return;
+      const c=charts[d.id]; if(!c) return;
+      try{ c.resize(); }catch(e){}
+    });
+  });
+}
+
+/* ---- selección de operador ----
+   PETICIÓN 5: la antigua lista lateral propia de Evaluación desapareció.
+   El drill-down se hace con el FILTRO 3 (Operador) del panel global, igual que
+   en el resto de módulos; al hacer clic en una fila de la tabla se escribe ese
+   mismo filtro para que panel y vista nunca se contradigan. */
+function seleccionarOperador(nombre){
+  FILTROS.operador=nombre||'';
+  const sel=document.getElementById('gfOperador');
+  if(sel&&[...sel.options].some(o=>o.value===FILTROS.operador)) sel.value=FILTROS.operador;
+  SELECTED=FILTROS.operador||null;
+  document.body.classList.remove('nav-open');
+  refresh();
+}
+
+/* ---- VISTA FLOTA ---- */
+function renderFleet(ops){
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('opView').style.display='none';
+  document.getElementById('fleetView').style.display='block';
+  const t=tokens();
+  const tot={ops:ops.length,ev:0,km:0,h:0,viajes:0};
+  ops.forEach(o=>{tot.ev+=o.eventos;tot.km+=o.km;tot.h+=o.horas;tot.viajes+=o.viajes;});
+  const fleetEvh=tot.h>0?tot.ev/tot.h:0, fleetEv10=tot.km>0?tot.ev/tot.km*10:0;
+  const ft=document.getElementById('fleetTiles');
+  ft.innerHTML=[
+    ['operadores','Operadores',fmt(tot.ops),'con actividad',''],
+    ['eventos','Eventos',fmt(tot.ev),'total del periodo',''],
+    ['evhora','EV/Hora flota',fmt(fleetEvh,2),semLabel(fleetEvh),semTileColor(fleetEvh)],
+    ['ev10km','EV/10KM flota',fmt(fleetEv10,2),'por 10 km',''],
+    ['distancia','Distancia',fmt(tot.km,0)+' <small>km</small>','recorrida',''],
+    ['horas','Horas manejo',fmt(tot.h,0)+' <small>h</small>','telemetría',''],
+  ].map(x=>`<div class="tile">${tileIcon(x[0],x[4])}<div class="v"${x[4]?` style="--val:${x[4]}"`:''}>${x[2]}</div><div class="k">${x[1]}</div><div class="d">${x[3]}</div></div>`).join('');
+  UIX.stagger(ft);
+
+  // ranking EV/H
+  const byEvh=[...ops].filter(o=>o.horas>0).sort((a,b)=>b.evh-a.evh).slice(0,20);
+  mk('chFleetEvh').setOption({...ANIM,grid:baseGrid,tooltip:tt({trigger:'axis',valueFormatter:v=>fmt(v,2)+' ev/h'}),
+    xAxis:Object.assign({type:'value',name:'ev/h'},axisStyle()),
+    yAxis:Object.assign({type:'category',inverse:true,data:byEvh.map(o=>short(o.conductor,16))},axisStyle()),
+    series:[{type:'bar',data:byEvh.map(o=>({value:+o.evh.toFixed(2),itemStyle:{color:semColor(o.evh),borderRadius:[0,5,5,0]}})),barMaxWidth:15,
+      label:{show:true,position:'right',color:t.axis,formatter:p=>fmt(p.value,1)},
+      markLine:{symbol:'none',lineStyle:{color:cssVar('--ok'),type:'dashed'},label:{color:cssVar('--ok'),formatter:'Meta 3'},data:[{xAxis:3}]}}]});
+
+  // distribución por tipo
+  const types=allEventTypes(ops);
+  const totals=types.map(ty=>({name:ty,value:ops.reduce((a,o)=>a+(o.cats[ty]||0),0)}));
+  mk('chFleetType').setOption({...ANIM,tooltip:tt({trigger:'item',formatter:p=>`${p.name}<br><b>${fmt(p.value)}</b> (${p.percent}%)`}),
+    legend:{type:'scroll',bottom:0,textStyle:{color:t.axis,fontFamily:MONO,fontSize:10.5}},
+    series:[{type:'pie',radius:['44%','70%'],center:['50%','44%'],itemStyle:{borderColor:t.panel,borderWidth:3,borderRadius:4},
+      label:{color:t.axis,formatter:'{b}\n{d}%'},data:totals.map((d,i)=>({name:d.name,value:d.value,itemStyle:{color:pal()[i%pal().length]}}))}]});
+
+  // tabla resumen ejecutivo — agrupada por UDN real (acordeón, ver UIX.agruparTabla).
+  // La columna "Grupo" sigue mostrando el grupo crudo de la API; la agrupación usa `udn`.
+  const cats5=['Clutch','Frenos','Fuel','Motor','Salud'];
+  const tbl=document.getElementById('tblFleet');
+  tbl.innerHTML=
+    `<thead><tr><th>#</th><th>Operador</th><th>UDN</th><th>Cliente / grupo</th><th class="num">T.EV</th>${cats5.map(c=>`<th class="num">${c}</th>`).join('')}<th class="num">KM</th><th class="num">Horas</th><th class="num">Viajes</th><th class="num">Días</th><th class="num">EV/H</th><th class="num">EV/10KM</th><th>Estado</th></tr></thead><tbody>`+
+    ops.map((o,i)=>{const cls=semClass(o.evh);const b=cls==='ok'?'g':cls==='warn'?'y':cls==='high'?'o':'r';
+      return `<tr data-op="${encodeURIComponent(o.conductor)}" data-udn="${(o.udn||'—').replace(/"/g,'&quot;')}"><td>${i+1}</td><td>${o.conductor}</td><td>${o.udn||'—'}</td><td>${o.grupo||'—'}</td>
+      <td class="num">${fmt(o.eventos)}</td>${cats5.map(c=>`<td class="num">${o.cats[c]?fmt(o.cats[c]):'—'}</td>`).join('')}
+      <td class="num">${fmt(o.km,0)}</td><td class="num">${hoursToHms(o.horas)}</td><td class="num">${fmt(o.viajes)}</td><td class="num">${o.dias}</td>
+      <td class="num">${o.horas>0?fmt(o.evh,2):'S/D'}</td><td class="num">${o.km>0?fmt(o.ev10,2):'S/D'}</td>
+      <td><span class="badge ${b}">${semLabel(o.evh)}</span></td></tr>`;}).join('')+`</tbody>`;
+  UIX.agruparTabla(tbl,{ id:'eval-resumen', niveles:['udn'], etiquetas:['UDN'],
+    /* UDN más crítica arriba (mayor EV/Hora agregado) */
+    riesgo:(trs,nivel,clave)=>{
+      const f=ops.filter(o=>(o.udn||'—')===clave);
+      const ev=f.reduce((a,o)=>a+o.eventos,0), h=f.reduce((a,o)=>a+o.horas,0);
+      return h>0?ev/h:-1; },
+    resumen:(n,clave,trs)=>{
+      const f=ops.filter(o=>(o.udn||'—')===clave);
+      const ev=f.reduce((a,o)=>a+o.eventos,0), h=f.reduce((a,o)=>a+o.horas,0), km=f.reduce((a,o)=>a+o.km,0);
+      const evh=h>0?ev/h:0, cls=semClass(evh);
+      return `<b>${f.length}</b><i>operadores</i><b>${fmt(ev)}</b><i>eventos</i><b>${fmt(km,0)}</b><i>km</i>`+
+             `<span class="badge ${{ok:'g',warn:'y',high:'o',bad:'r'}[cls]}">${h>0?fmt(evh,2)+' ev/h':'S/D'}</span>`;
+    }});
+  tbl.querySelectorAll('tbody tr[data-op]').forEach(tr=>tr.addEventListener('click',()=>{
+    seleccionarOperador(decodeURIComponent(tr.dataset.op));
+    window.scrollTo({top:0,behavior:REDUCED?'auto':'smooth'}); }));
+}
+
+/* ---- VISTA OPERADOR ---- */
+function renderOperator(ops){
+  const o=ops.find(x=>x.conductor===SELECTED); if(!o){ SELECTED=null; renderFleet(ops); return; }
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('fleetView').style.display='none';
+  document.getElementById('opView').style.display='block';
+  const t=tokens();
+  document.getElementById('opName').textContent=o.conductor;
+  document.getElementById('opGroup').textContent=o.grupo;
+  const semEl=document.getElementById('opSem'); semEl.className='sembadge sem-'+semClass(o.evh);
+  semEl.innerHTML=`<span class="sem dot-${semClass(o.evh)}" style="width:8px;height:8px;border-radius:50%"></span>${semLabel(o.evh)} · ${o.horas>0?fmt(o.evh,2)+' ev/h':'S/D'}`;
+
+  const ot=document.getElementById('opTiles');
+  ot.innerHTML=[
+    ['eventos','Eventos totales',fmt(o.eventos),'en el periodo',''],
+    ['evhora','EV/Hora',o.horas>0?fmt(o.evh,2):'S/D',semLabel(o.evh),semTileColor(o.evh)],
+    ['ev10km','EV/10KM',o.km>0?fmt(o.ev10,2):'S/D','por 10 km',''],
+    ['distancia','Distancia',fmt(o.km,0)+' <small>km</small>','recorrida',''],
+    ['horas','Horas manejo',hoursToHms(o.horas),'telemetría',''],
+    ['viajes','Viajes',fmt(o.viajes),o.dias+' días activos',''],
+  ].map(x=>`<div class="tile">${tileIcon(x[0],x[4])}<div class="v"${x[4]?` style="--val:${x[4]}"`:''}>${x[2]}</div><div class="k">${x[1]}</div><div class="d">${x[3]}</div></div>`).join('');
+  UIX.stagger(ot);
+
+  // días ordenados
+  const days=Object.keys(o.daily).sort();
+  const evh=days.map(f=>{const dd=o.daily[f];return dd.horas>0?+(dd.ev/dd.horas).toFixed(2):null;});
+  const ev10=days.map(f=>{const dd=o.daily[f];return dd.km>0?+(dd.ev/dd.km*10).toFixed(2):null;});
+  const evCount=days.map(f=>o.daily[f].ev);
+  const lbl=days.map(f=>f.slice(5));
+
+  mk('chOpTrend').setOption({...ANIM,grid:{left:8,right:20,top:36,bottom:24,containLabel:true},
+    tooltip:tt({trigger:'axis'}), legend:{top:0,textStyle:{color:t.axis,fontFamily:MONO,fontSize:10.5},data:['EV/Hora','EV/10KM','Eventos']},
+    xAxis:Object.assign({type:'category',data:lbl},axisStyle()),
+    yAxis:[Object.assign({type:'value',name:'ev/h · ev/10km'},axisStyle()),Object.assign({type:'value',name:'eventos',position:'right',splitLine:{show:false}},axisStyle())],
+    series:[
+      {name:'Eventos',type:'bar',yAxisIndex:1,data:evCount,itemStyle:{color:'rgba(99,102,106,.28)',borderRadius:[3,3,0,0]},barMaxWidth:22},
+      {name:'EV/Hora',type:'line',smooth:true,connectNulls:true,data:evh,symbolSize:6,lineStyle:{width:3,color:pal()[0]},itemStyle:{color:pal()[0]},
+        markLine:{symbol:'none',lineStyle:{color:cssVar('--ok'),type:'dashed'},label:{color:cssVar('--ok'),formatter:'3'},data:[{yAxis:3}]}},
+      {name:'EV/10KM',type:'line',smooth:true,connectNulls:true,data:ev10,symbolSize:6,lineStyle:{width:3,color:pal()[1]},itemStyle:{color:pal()[1]}},
+    ]});
+
+  // factor por tipo
+  const cats=Object.entries(o.cats).sort((a,b)=>b[1]-a[1]);
+  const fac=cats.map(([k,v])=>({name:k,value:o.km>0?+(v/o.km*10).toFixed(2):0,cnt:v}));
+  mk('chOpFactor').setOption({...ANIM,grid:baseGrid,tooltip:tt({trigger:'axis',formatter:p=>{const d=fac[p[0].dataIndex];return `${d.name}<br><b>${fmt(d.value,2)}</b> ev/10km<br>${fmt(d.cnt)} eventos`;}}),
+    xAxis:Object.assign({type:'value',name:'ev/10km'},axisStyle()),
+    yAxis:Object.assign({type:'category',inverse:true,data:fac.map(f=>short(f.name,16))},axisStyle()),
+    series:[{type:'bar',data:fac.map((f,i)=>({value:f.value,itemStyle:{color:pal()[i%pal().length],borderRadius:[0,5,5,0]}})),barMaxWidth:16,
+      label:{show:true,position:'right',color:t.axis,formatter:p=>fmt(p.value,2)}}]});
+
+  // eventos por día y categoría (apilado)
+  const types=Object.keys(o.cats);
+  mk('chOpStack').setOption({...ANIM,grid:baseGrid,legend:{top:0,type:'scroll',textStyle:{color:t.axis,fontFamily:MONO,fontSize:10.5}},tooltip:tt({trigger:'axis',axisPointer:{type:'shadow'}}),
+    xAxis:Object.assign({type:'category',data:lbl},axisStyle()),yAxis:Object.assign({type:'value'},axisStyle()),
+    series:types.map((ty,i)=>({name:ty,type:'bar',stack:'e',data:days.map(f=>o.daily[f].cats[ty]||0),itemStyle:{color:pal()[i%pal().length]},barMaxWidth:24}))});
+
+  // evaluación de mejora (1ª vs 2ª mitad)
+  renderImprovement(o,days);
+
+  // tabla diaria
+  const cats5=['Clutch','Frenos','Fuel','Motor','Salud'];
+  document.getElementById('tblOpDaily').innerHTML=
+    `<thead><tr><th>Fecha</th><th class="num">T.EV</th><th class="num">KM</th><th class="num">Horas</th>${cats5.map(c=>`<th class="num">${c}</th>`).join('')}<th class="num">Otros</th><th class="num">EV/H</th><th class="num">EV/10KM</th></tr></thead><tbody>`+
+    days.map(f=>{const dd=o.daily[f];const otros=dd.ev-cats5.reduce((a,c)=>a+(dd.cats[c]||0),0);
+      const evhd=dd.horas>0?dd.ev/dd.horas:null, ev10d=dd.km>0?dd.ev/dd.km*10:null;
+      return `<tr><td>${f}</td><td class="num">${fmt(dd.ev)}</td><td class="num">${fmt(dd.km,1)}</td><td class="num">${hoursToHms(dd.horas)}</td>
+      ${cats5.map(c=>`<td class="num">${dd.cats[c]?fmt(dd.cats[c]):'—'}</td>`).join('')}<td class="num">${otros>0?fmt(otros):'—'}</td>
+      <td class="num">${evhd!=null?`<span class="badge ${semClass(evhd)==='ok'?'g':semClass(evhd)==='warn'?'y':semClass(evhd)==='high'?'o':'r'}">${fmt(evhd,2)}</span>`:'S/D'}</td>
+      <td class="num">${ev10d!=null?fmt(ev10d,2):'S/D'}</td></tr>`;}).join('')+`</tbody>`;
+}
+
+function renderImprovement(o,days){
+  const active=days.filter(f=>o.daily[f].horas>0);
+  const box=document.getElementById('opVerdict');
+  if(active.length<2){ box.innerHTML=`<div class="verdict"><div class="ico" style="background:rgba(99,102,106,.14)">≈</div><div class="txt"><b>Muestra mínima</b><p>Insuficientes días con telemetría para evaluar tendencia.</p></div></div>`;
+    if(charts['chOpImprove'])charts['chOpImprove'].clear(); return; }
+  const half=Math.floor(active.length/2);
+  const evhOf=arr=>{let e=0,h=0;arr.forEach(f=>{e+=o.daily[f].ev;h+=o.daily[f].horas;});return h>0?e/h:0;};
+  const a=evhOf(active.slice(0,half)), b=evhOf(active.slice(half)), delta=b-a;
+  let ico,col,titulo,detalle;
+  if(delta<=-1){ ico='↓↓';col=cssVar('--ok');titulo='Mejora clara';detalle=`EV/Hora bajó de ${fmt(a,2)} a ${fmt(b,2)} (Δ${fmt(delta,2)}). Reconocer al operador.`; }
+  else if(delta>=1){ ico='↑↑';col=cssVar('--bad');titulo='Empeora';detalle=`EV/Hora subió de ${fmt(a,2)} a ${fmt(b,2)} (Δ+${fmt(delta,2)}). Requiere retroalimentación.`; }
+  else { ico='→';col=cssVar('--warn');titulo='Estable';detalle=`Comportamiento estable. EV/H 1ª=${fmt(a,2)} · 2ª=${fmt(b,2)}.`; }
+  box.innerHTML=`<div class="verdict"><div class="ico" style="background:${col}22;color:${col}">${ico}</div><div class="txt"><b>${titulo}</b><p>${detalle}</p></div></div>`;
+  const t=tokens();
+  mk('chOpImprove').setOption({animation:!REDUCED,grid:{left:8,right:16,top:16,bottom:20,containLabel:true},tooltip:tt({trigger:'axis',valueFormatter:v=>fmt(v,2)+' ev/h'}),
+    xAxis:Object.assign({type:'category',data:['1ª mitad','2ª mitad']},axisStyle()),yAxis:Object.assign({type:'value',name:'ev/h'},axisStyle()),
+    series:[{type:'bar',data:[{value:+a.toFixed(2),itemStyle:{color:semColor(a)}},{value:+b.toFixed(2),itemStyle:{color:semColor(b)}}],barMaxWidth:60,
+      itemStyle:{borderRadius:[5,5,0,0]},label:{show:true,position:'top',color:t.axis,formatter:p=>fmt(p.value,2)}}]});
+}
+
+/* ---- carga de datos ----
+   Única fuente: el histórico de Traffilog (snapshot v2, DATA_CONTRACT.md).
+   Se retiró la importación de archivos y los datos de ejemplo: el portal ya
+   consume la API directamente, así que un segundo origen sólo confundía. */
+function afterData(source){
+  STATE.source=source;
+  STATE.hasDates=[...STATE.trips,...STATE.events].some(r=>r.fecha);
+  const dates=[...STATE.trips,...STATE.events].map(r=>r.fecha).filter(Boolean).sort();
+  ['expXlsx','expCsv','expJson'].forEach(id=>document.getElementById(id).disabled=false);
+  const pill=document.getElementById('srcPill');
+  const arc=(SNAPSHOT&&SNAPSHOT.archivo)||{};
+  const nSem=(arc.semanas_cargadas||[]).length, nDisp=(arc.semanas_disponibles||[]).length;
+  /* "Websocket online" = hay datos del MISMO DÍA (pedido del cliente 2026-07-28);
+     si el dato más nuevo es de otro día, el pill lo dice en vez de presumir online. */
+  const maxFecha=dates.length?dates[dates.length-1]:'';
+  const hoyLocal=new Date().toLocaleDateString('sv-SE');   // YYYY-MM-DD local
+  pill.className='pill live';
+  pill.innerHTML='<span class="dot"></span>'+(maxFecha>=hoyLocal?'Websocket online':'Websocket · datos al '+(maxFecha||'—'));
+  estadoFuente(false,'Websocket online · Traffilog',
+    (nDisp?nSem+' de '+nDisp+' semanas sincronizadas · ':'')+
+    (STATE.updatedAt?'act. '+new Date(STATE.updatedAt).toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}):STATE.range||'—'));
+  SELECTED=FILTROS.operador||null; refresh();
+}
+function estadoFuente(err,titulo,meta){
+  const box=document.getElementById('srcBox'); if(!box)return;
+  box.classList.toggle('err',!!err);
+  box.querySelector('.ic').innerHTML=ICONOS.svg(err?'aviso':'escudo');
+  const _ss=document.getElementById('srcState'); if(_ss)_ss.textContent=titulo;
+  (document.getElementById('srcMeta')||{}).textContent=meta||'';
+}
+/* El lector del archivo (aplicacion/archivo.js) es un módulo ES: se evalúa después de
+   este script clásico. Se espera su evento en vez de asumir que ya existe. */
+function esperarArchivo(){
+  if(window.ARCHIVO) return Promise.resolve(window.ARCHIVO);
+  return new Promise((res,rej)=>{
+    const t=setTimeout(()=>rej(new Error('aplicacion/archivo.js no cargó')),15000);
+    addEventListener('archivo-listo',()=>{clearTimeout(t);res(window.ARCHIVO);},{once:true});
+  });
+}
+
+/* Vuelca el snapshot v2 que arma el archivo local sobre el estado del portal. */
+function aplicarSnapshot(j){
+  STATE.trips=normalizeTrips(j.trips||[]); STATE.events=normalizeEvents(j.events||[]);
+  STATE.drivers=(j.drivers||[]).map(d=>({conductor:d.conductor||d.driver_name||'',
+    grupo:d.grupo||d.group_name||'', udn:d.udn||'', cliente:d.cliente||''})).filter(d=>d.conductor);
+  STATE.range=j.range||STATE.range; STATE.updatedAt=j.updated_at;
+  setSnapshot(j);                       // snapshot v2 → módulos Fase 2 + los 8 filtros
+  afterData('archivo');
+}
+
+/* Carga inicial / recarga del archivo histórico local. NO llama a la API:
+   todo lo pasado sale de datos/historico/. `refrescar()` relee el índice y la
+   semana en curso, que es lo único que el colector reescribe. */
+let ARCH=null;
+async function cargarArchivo(announce){
+  if(announce!==false) toast('Leyendo el archivo histórico…');
+  try{
+    ARCH=ARCH||await esperarArchivo();
+    if(!ARCH.indice) await ARCH.iniciar(); else await ARCH.refrescar();
+    /* 2026-07-26: se carga TODO el archivo, no las últimas 4 semanas. Con 4,
+       el histórico de Score de Seguridad moría a las 4 columnas y el calendario
+       marcaba "sin cobertura" semanas que SÍ estaban en disco pero no en memoria
+       (memoria fragmentada al cargar a pedazos). Medido con 20 semanas /
+       174,729 registros: 714 ms de carga — el costo no justifica el recorte. */
+    await ARCH.asegurarTodo();
+  }catch(e){
+    console.error('[archivo]',e);
+    estadoFuente(true,'Archivo no disponible','No se pudo leer datos/historico/indice.json');
+    if(announce!==false) toast('No se pudo leer el archivo histórico local.');
+    return false;
+  }
+  aplicarSnapshot(ARCH.snapshot());
+  document.body.classList.remove('nav-open');
+  const inf=ARCH.indice||{};
+  if(announce!==false) toast('Archivo leído · '+ARCH.cargadas.length+' de '+
+    ARCH.disponibles.length+' semanas · '+(SNAPSHOT&&SNAPSHOT.meta?SNAPSHOT.meta.operadores:0)+' operadores');
+  console.info('[archivo] semanas cargadas:',ARCH.cargadas.join(', '),
+    '· disponibles:',ARCH.disponibles.map(s=>s.semana).join(', '),'· cobertura',inf.cobertura);
+  return true;
+}
+
+/* Carga perezosa: asegura en memoria las semanas que cubren [desde,hasta] y
+   re-renderiza si algo nuevo entró. Se llama desde los filtros de fecha/semana. */
+async function asegurarPeriodo(desde,hasta){
+  if(!ARCH) return false;
+  let nuevo=false;
+  try{ nuevo=await ARCH.asegurarRango(desde||null,hasta||null); }
+  catch(e){ console.warn('[archivo] rango',e); return false; }
+  if(nuevo) aplicarSnapshot(ARCH.snapshot());
+  return nuevo;
+}
+async function asegurarSemanas(ids){
+  if(!ARCH||!ids.length) return false;
+  const nuevo=await ARCH.asegurar(ids).catch(()=>false);
+  if(nuevo) aplicarSnapshot(ARCH.snapshot());
+  return nuevo;
+}
+
+/* ---- export ---- */
+function exportRows(){ return operators().map(o=>({
+  operador:o.conductor,grupo:o.grupo,eventos:o.eventos,ev_por_hora:+o.evh.toFixed(2),ev_por_10km:+o.ev10.toFixed(2),
+  km:+o.km.toFixed(1),horas:+o.horas.toFixed(2),viajes:o.viajes,dias:o.dias,estado:semLabel(o.evh),
+  ...Object.fromEntries(Object.entries(o.cats).map(([k,v])=>['ev_'+k.toLowerCase().replace(/[^\w]+/g,'_'),v]))
+})); }
+function stamp(){ return rangeLabel().replace(/[\/ ]/g,'').replace('–','_'); }
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();}
+function expXlsx(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(exportRows()),'Por operador');
+  const evRows=STATE.events.filter(pasaFiltros).map(e=>({fecha:e.fecha||'',operador:e.conductor,grupo:e.grupo,evento:e.evento,cantidad:e.cantidad}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(evRows),'Eventos');XLSX.writeFile(wb,`evaluacion-conductores_${stamp()}.xlsx`);toast('Excel exportado');}
+function expCsv(){const csv=XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(exportRows()));dl(new Blob([csv],{type:'text/csv;charset=utf-8'}),`evaluacion-conductores_${stamp()}.csv`);toast('CSV exportado');}
+function expJson(){dl(new Blob([JSON.stringify({generado:new Date().toISOString(),periodo:rangeLabel(),grupo:groupFilter(),operadores:exportRows()},null,2)],{type:'application/json'}),`evaluacion-conductores_${stamp()}.json`);toast('JSON exportado');}
+
+/* ============================================================
+   MÓDULOS FASE 2 — estado global de filtros + navegación
+   window.MODULOS[id].render(container, { data: SNAPSHOT, filtros })
+   ============================================================ */
+let SNAPSHOT=null;            // snapshot v2 completo (DATA_CONTRACT.md)
+let ACTIVE_TAB='panorama';    // 'panorama' | 'evaluacion' | 'score-seguridad' | 'cargas' | 'm3operacion' | 'rankings' | 'cerebro'
+const FILTROS={ udn:'', cliente:'', operador:'', vehiculo:'', eventos:[], desde:null, hasta:null,
+                semanaActual:false, semanasComparar:[] };
+let consejosCargados=false;
+
+function isoWeekOf(d){ const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const day=(dt.getUTCDay()+6)%7; dt.setUTCDate(dt.getUTCDate()-day+3);
+  const jan4=new Date(Date.UTC(dt.getUTCFullYear(),0,4));
+  const wk=1+Math.round(((dt-jan4)/86400000-3+((jan4.getUTCDay()+6)%7))/7);
+  return dt.getUTCFullYear()+'-W'+String(wk).padStart(2,'0'); }
+
+function filtrosActuales(){ return {
+  udn:FILTROS.udn||'', cliente:FILTROS.cliente||'', operador:FILTROS.operador||'',
+  vehiculo:FILTROS.vehiculo||'', eventos:FILTROS.eventos.slice(),
+  desde:FILTROS.desde||null, hasta:FILTROS.hasta||null,
+  semanaActual:FILTROS.semanaActual?isoWeekOf(new Date()):null,
+  semanasComparar:FILTROS.semanasComparar.slice() }; }
+
+function setSnapshot(j){ SNAPSHOT=recortarPorPermisos(j); buildFiltrosUI(SNAPSHOT); cargarConsejosPeriodo(j); }
+function cargarConsejosPeriodo(j){ cargarConsejos();
+  /* Al PRIMER snapshot se aplica el periodo por defecto (semana en curso a día
+     vencido). Solo una vez: después mandan las elecciones del usuario. */
+  if(!window.__periodoAplicado){ window.__periodoAplicado=true; aplicarPeriodoDefault(); return; }
+  if(ACTIVE_TAB!=='evaluacion') renderActiveModule(); }
+
+/* Alcance por UDN del usuario (usuario.udn_permitidas; vacío = todas).
+   Es un recorte de EXPERIENCIA, no una frontera de seguridad: el blindaje real
+   del feed se activa con AUTH_PROTEGER_DATOS=1 en la función. Ver docs/AUTH.md. */
+function recortarPorPermisos(j){
+  const permitidas=(window.AUTH&&AUTH.udnPermitidas())||[];
+  if(!permitidas.length||!j||!Array.isArray(j.registros))return j;
+  const ok=u=>permitidas.includes(u);
+  const c={...j};
+  c.registros=j.registros.filter(r=>ok(r.udn));
+  if(Array.isArray(j.unidades)) c.unidades=j.unidades.filter(u=>ok(u.udn));
+  if(j.scores){ c.scores={
+    por_operador:(j.scores.por_operador||[]).filter(s=>ok(s.udn)),
+    por_operador_semana:(j.scores.por_operador_semana||[]).filter(s=>ok(s.udn)) }; }
+  const ops=new Set(c.registros.map(r=>r.conductor));
+  if(Array.isArray(j.drivers)) c.drivers=j.drivers.filter(d=>ops.has(d.conductor));
+  if(Array.isArray(j.trips))   c.trips  =j.trips.filter(t=>ops.has(t.conductor));
+  if(Array.isArray(j.events))  c.events =j.events.filter(e=>ops.has(e.conductor));
+  c.meta={...(j.meta||{}), udns:((j.meta&&j.meta.udns)||[]).filter(ok), alcance_usuario:permitidas.slice()};
+  return c;
+}
+
+/* consejos deep-research (Fase 5) → M3 Operación */
+function cargarConsejos(){ if(consejosCargados||!window.MODULOS||!MODULOS.m3operacion)return; consejosCargados=true;
+  fetch('aplicacion/consejos.json').then(r=>r.ok?r.json():null).then(j=>{
+    if(!j)return;
+    MODULOS.m3operacion.setConsejos(adaptarConsejos(j));
+    /* el cerebro consume el catálogo CRUDO (porEvento/fatiga/dtcComunes/plantillas) */
+    if(MODULOS.cerebro) MODULOS.cerebro.setConsejos(j);
+    if(MODULOS.escuela&&MODULOS.escuela.setConsejos) MODULOS.escuela.setConsejos(j);
+    if(MODULOS.habitos&&MODULOS.habitos.setConsejos) MODULOS.habitos.setConsejos(adaptarConsejos(j)); }).catch(()=>{}); }
+function adaptarConsejos(j){ const pe=j.porEvento||{}; const out={};
+  const toC=s=>({titulo:s.nombre||'',consejo:[s.diagnostico,s.consejo].filter(Boolean).join(' · ')});
+  Object.keys(pe).forEach(k=>{ out[k]=toC(pe[k]); });
+  const map={ralenti_5min:'ralenti',ralenti_15min:'ralenti',clutch_arranque_alto:'clutch',clutch_parado:'clutch',
+    clutch_movimiento:'clutch',freno_prolongado:'frenoProlongado',rpm_fuera_banda:'rpm',torque_bajo_rpm:'rpm',
+    alto_consumo:'consumo',acelerador_brusco:'AcAlto',dtc:'dtc'};
+  Object.keys(map).forEach(k=>{ if(pe[map[k]]) out[k]=toC(pe[map[k]]); });
+  const fel=j.plantillasFeedback&&(j.plantillasFeedback.felicitacion||j.plantillasFeedback.reconocimiento);
+  if(fel) out.__felicitacion=typeof fel==='string'?fel:(fel.texto||fel.plantilla||undefined);
+  return out; }
+
+/* poblar la barra de filtros desde el snapshot */
+function buildFiltrosUI(j){
+  const regs=j.registros||[], meta=j.meta||{};
+  const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>String(x).localeCompare(String(y),'es',{numeric:true}));
+  const udns=(Array.isArray(meta.udns)&&meta.udns.length)?meta.udns:uniq(regs.map(r=>r.udn));
+  const clientes=(Array.isArray(meta.clientes)&&meta.clientes.length)?meta.clientes:uniq(regs.map(r=>r.cliente));
+  /* el filtro 3 solo lista PERSONAS: los viajes sin identificar no son operadores.
+     Se UNE el padrón (snapshot.drivers/unidades — flota.json o Excel importado):
+     sin esto, importar 900 unidades no cambiaría ni un <option> (2026-07-28). */
+  const ops=uniq(regs.filter(r=>!r.sinIdentificar).map(r=>r.conductor)
+    .concat((j.drivers||[]).map(d=>d.conductor)).filter(n=>!/^SIN OPERADOR/.test(n||'')));
+  const vehMap={}; regs.forEach(r=>{ if(r.placa&&!vehMap[r.placa]) vehMap[r.placa]=r.udn||''; });
+  (j.unidades||[]).forEach(u=>{ if(u.placa&&!vehMap[u.placa]) vehMap[u.placa]=u.udn||''; });
+  const placas=uniq(Object.keys(vehMap));
+  const opt=(v,l)=>`<option value="${v}">${l||v}</option>`;
+  const keep=(id)=>document.getElementById(id).value;
+  const sel=(id,html,val)=>{const e=document.getElementById(id);e.innerHTML=html;e.value=val;if(e.value!==val)e.value='';};
+  /* UDN = SOLO Guadalajara · Colima · Lázaro Cárdenas (docs/udn-map.json). "Sin asignar"
+     no es una UDN ni un cliente: son los grupos que operaciones aún no ha mapeado. */
+  const UDN_REALES=['Guadalajara','Colima','Lázaro Cárdenas'];
+  const etiquetaUdn=u=>u==='Sin asignar'?'Sin asignar · pendiente de mapeo':u;
+  const udnsOrd=[...udns].sort((a,b)=>{
+    const ia=UDN_REALES.indexOf(a), ib=UDN_REALES.indexOf(b);
+    return (ia<0?9:ia)-(ib<0?9:ib) || String(a).localeCompare(String(b),'es'); });
+  sel('gfUdn',opt('','Todas las UDN')+udnsOrd.map(u=>opt(u,etiquetaUdn(u))).join(''),keep('gfUdn'));
+  sel('gfCliente',opt('','Todos los clientes')+clientes.map(c=>opt(c)).join(''),keep('gfCliente'));
+  sel('gfOperador',opt('','Todos los operadores')+ops.map(o=>opt(o)).join(''),keep('gfOperador'));
+  sel('gfVehiculo',opt('','Todas las unidades')+placas.map(p=>opt(p,p+(vehMap[p]?' · '+vehMap[p]:''))).join(''),keep('gfVehiculo'));
+  const cat=meta.catalogo||{};
+  const llaves=cat.llaves||['AcAlto','AcMed','AcBajo','FrAlto','FrMed','FrBajo','GirAlto','GirMed','GirBajo','VelAlto','VelMed','VelBajo'];
+  const lbl=cat.llave_label||{};
+  document.getElementById('gfEventos').innerHTML=llaves.map(k=>
+    `<button class="chip${FILTROS.eventos.includes(k)?' on':''}" data-ev="${k}" title="${lbl[k]||k}">${k}</button>`).join('');
+  const ext=cat.extendido||{};
+  document.getElementById('gfEventosExt').innerHTML=Object.keys(ext).map(k=>
+    `<button class="chip${FILTROS.eventos.includes(k)?' on':''}" data-ev="${k}" title="${ext[k]}">${k}</button>`).join('');
+  document.querySelectorAll('#gfEventos .chip,#gfEventosExt .chip').forEach(ch=>ch.addEventListener('click',()=>{
+    const k=ch.dataset.ev,i=FILTROS.eventos.indexOf(k);
+    if(i>=0){FILTROS.eventos.splice(i,1);ch.classList.remove('on');}
+    else{FILTROS.eventos.push(k);ch.classList.add('on');}
+    renderActiveModule(); }));
+  construirPeriodoUI(j);
+  if(j.from){document.getElementById('gfDesde').min=document.getElementById('gfHasta').min=j.from;}
+  if(j.to){document.getElementById('gfDesde').max=document.getElementById('gfHasta').max=j.to;}
+}
+
+/* ================= FILTRO PERIODO (semana / mes) — 2026-07-25 =================
+   Como el portal operativo de referencia: eliges LA semana o EL mes y todo el
+   portal se acota a ese rango (via FILTROS.desde/hasta, que ya respetan todos
+   los módulos). Regla central: "a día vencido" — el corte llega hasta AYER,
+   porque el día en curso está incompleto y ensucia promedios y scores. Si hoy
+   es lunes, el día vencido cae en la semana anterior: se muestra ésa completa.
+
+   2026-08-08 — MULTISELECCIÓN. Este filtro absorbió al viejo filtro 8 ("semanas
+   a comparar") y a los filtros locales del módulo Hábitos: había tres sitios
+   para responder la misma pregunta y se contradecían. Ahora es UNO solo y
+   admite varias semanas (o varios meses) = ACUMULADO. En modo semana se
+   publica además FILTROS.semanasComparar con las semanas EXACTAS, para que una
+   selección no contigua (p. ej. W28 + W32) no arrastre las semanas de en medio;
+   el rango desde/hasta se conserva porque es lo que impone el día vencido. */
+let PERIODO={modo:'semana',valores:[]};
+function ymdLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function ayerYmd(){const d=new Date();d.setDate(d.getDate()-1);return ymdLocal(d);}
+function rangoDeSemana(iso){const m=/^(\d{4})-W(\d{2})$/.exec(iso||'');if(!m)return null;
+  const d=new Date(+m[1],0,4);const dow=(d.getDay()+6)%7;d.setDate(d.getDate()-dow+(+m[2]-1)*7);
+  const fin=new Date(d);fin.setDate(fin.getDate()+6);return {desde:ymdLocal(d),hasta:ymdLocal(fin)};}
+function rangoDeMes(ym){const p=(ym||'').split('-');if(p.length<2)return null;
+  return {desde:ym+'-01',hasta:ymdLocal(new Date(+p[0],+p[1],0))};}
+const MESES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function etiquetaMes(ym){const p=ym.split('-');return MESES_ES[+p[1]-1]+' '+p[0];}
+function mesesDisponibles(){const idx=(window.ARCHIVO&&ARCHIVO.disponibles)||[];const set=new Set();
+  idx.forEach(x=>{if(x.from)set.add(x.from.slice(0,7));if(x.to)set.add(x.to.slice(0,7));});
+  return [...set].sort();}
+function construirPeriodoUI(j){
+  const sel=document.getElementById('gfPeriodoSel');if(!sel)return;
+  const hoyW=isoWeekOf(new Date()), hoyM=ymdLocal(new Date()).slice(0,7);
+  let ops;
+  if(PERIODO.modo==='semana'){
+    const semanas=((j&&Array.isArray(j.semanas)&&j.semanas.length)?j.semanas:[]).slice().sort().reverse();
+    ops=semanas.map(x=>`<option value="${x}">${x}${x===hoyW?' · en curso':''}</option>`);
+  }else{
+    ops=mesesDisponibles().reverse().map(m=>`<option value="${m}">${etiquetaMes(m)}${m===hoyM?' · en curso':''}</option>`);
+  }
+  sel.innerHTML='<option value="">— todo el histórico cargado —</option>'+ops.join('');
+  const sels=new Set(PERIODO.valores);
+  Array.from(sel.options).forEach(o=>{o.selected=o.value?sels.has(o.value):sels.size===0;});
+  document.querySelectorAll('#gfPeriodoModo .chip').forEach(c=>c.classList.toggle('on',c.dataset.modo===PERIODO.modo));
+}
+/* valores: array de ISO-semanas ('2026-W32') o de meses ('2026-08'). Vacío = todo. */
+function aplicarPeriodo(valores){
+  const vals=(Array.isArray(valores)?valores:(valores?[valores]:[])).filter(Boolean).slice().sort();
+  PERIODO.valores=vals;
+  const hint=document.getElementById('gfPeriodoHint');
+  if(!vals.length){
+    FILTROS.desde=null;FILTROS.hasta=null;FILTROS.semanasComparar.length=0;
+    document.getElementById('gfDesde').value='';document.getElementById('gfHasta').value='';
+    if(hint)hint.textContent='Sin periodo: se muestra todo el histórico cargado.';
+    renderActiveModule();return;
+  }
+  const esSemana=PERIODO.modo==='semana';
+  const rangos=vals.map(v=>esSemana?rangoDeSemana(v):rangoDeMes(v)).filter(Boolean);
+  if(!rangos.length)return;
+  let desde=rangos.map(r=>r.desde).sort()[0];
+  let hasta=rangos.map(r=>r.hasta).sort().pop();
+  const ayer=ayerYmd();let corte=false;
+  if(hasta>ayer&&desde<=ayer){hasta=ayer;corte=true;}
+  FILTROS.desde=desde;FILTROS.hasta=hasta;
+  /* Sólo en modo semana podemos acotar al conjunto EXACTO: los meses no caen
+     en fronteras de semana ISO, así que ahí manda el rango. */
+  FILTROS.semanasComparar=esSemana?vals.slice():[];
+  document.getElementById('gfDesde').value=desde;document.getElementById('gfHasta').value=hasta;
+  const etq=esSemana
+    ? (vals.length===1?'Semana '+vals[0]:vals.length+' semanas · '+vals.join(' + '))
+    : (vals.length===1?etiquetaMes(vals[0]):vals.length+' meses · '+vals.map(etiquetaMes).join(' + '));
+  if(hint)hint.textContent=etq+' · '+desde+' → '+hasta+
+    (corte?' · a día vencido (hoy aún no cierra)':'')+(vals.length>1?' · acumulado':'');
+  (esSemana?asegurarSemanas(vals):asegurarPeriodo(desde,hasta))
+    .then(n=>{if(!n)renderActiveModule();});
+  renderActiveModule();
+}
+function aplicarPeriodoDefault(){
+  PERIODO.modo='semana';
+  let w=isoWeekOf(new Date());
+  const rw=rangoDeSemana(w);
+  if(rw&&ayerYmd()<rw.desde){
+    const previas=(((window.ARCHIVO&&ARCHIVO.disponibles)||[]).map(x=>x.semana)).filter(x=>x<w).sort();
+    if(previas.length)w=previas[previas.length-1];
+  }
+  PERIODO.valores=[w];
+  construirPeriodoUI(SNAPSHOT||{});
+  aplicarPeriodo([w]);
+}
+document.querySelectorAll('#gfPeriodoModo .chip').forEach(b=>b.addEventListener('click',()=>{
+  PERIODO.modo=b.dataset.modo;
+  /* al cambiar de modo cae al periodo EN CURSO de ese modo, a día vencido */
+  const v=PERIODO.modo==='semana'?isoWeekOf(new Date()):ymdLocal(new Date()).slice(0,7);
+  PERIODO.valores=[v];construirPeriodoUI(SNAPSHOT||{});
+  const sel=document.getElementById('gfPeriodoSel');
+  const existe=sel&&Array.from(sel.options).some(o=>o.value===v);
+  if(existe)aplicarPeriodo([v]);
+  else{PERIODO.valores=[];construirPeriodoUI(SNAPSHOT||{});aplicarPeriodo([]);}
+}));
+document.getElementById('gfPeriodoSel').addEventListener('change',e=>{
+  const vals=Array.from(e.target.selectedOptions).map(o=>o.value);
+  /* "— todo el histórico —" es excluyente: si entra, gana y limpia el resto */
+  aplicarPeriodo(vals.includes('')?[]:vals);
+  /* re-sincroniza la selección visible sin reconstruir el <select> (perdería el scroll) */
+  const s=new Set(PERIODO.valores);
+  Array.from(e.target.options).forEach(o=>{o.selected=o.value?s.has(o.value):s.size===0;});
+});
+
+/* render del módulo activo (idempotente — cada cambio de filtro re-renderiza) */
+function renderActiveModule(){
+  /* Evaluación consume los MISMOS filtros globales (petición 5): cualquier
+     cambio de filtro la repinta igual que a los módulos Fase 2. */
+  if(ACTIVE_TAB==='evaluacion'){ if(STATE.source) refresh(); return; }
+  /* "usuarios" es administrativo: no consume el snapshot de telemetría */
+  const requiereDatos=ACTIVE_TAB!=='usuarios';
+  const listo=SNAPSHOT||!requiereDatos;
+  const slot=document.getElementById('mod-'+ACTIVE_TAB);
+  /* El slot activo se muestra con display VACÍO (no 'block') para no pisar el
+     display:flex/grid que cada módulo define por su clase (.m3op, .pn, …). Un
+     inline 'block' anulaba ese flex y con él el gap vertical entre secciones. */
+  document.querySelectorAll('.mod-slot').forEach(s=>s.style.display=(s===slot&&listo)?'':'none');
+  document.getElementById('modNoData').style.display=listo?'none':'block';
+  if(!listo||!slot)return;
+  const m=window.MODULOS&&window.MODULOS[ACTIVE_TAB];
+  if(!m){slot.innerHTML='<div class="op-empty">Módulo no disponible (no se cargó su script).</div>';return;}
+  /* si hay una gráfica en primer plano, el re-render destruiría su hueco:
+     se cierra antes para no dejar el diálogo huérfano */
+  if(window.UIX) UIX.cerrarExpandida();
+  /* recargar(): tras cargar perezosamente una semana anterior (el módulo de cargas
+     lo pide cuando una racha vigente toca el borde de los datos), rearma el snapshot
+     desde el archivo y re-renderiza respetando el recorte por permisos. */
+  /* Antes sólo 'cargas' podía pedir semanas viejas. Combustible las necesita por
+     otra razón: para atribuir una caída de nivel hace falta la telemetría de ESA
+     semana, y las caídas suelen ser anteriores a las 4 que se cargan de arranque. */
+  const PIDEN_SEMANAS=['cargas','combustible'];
+  const recargar=()=>{ if(window.ARCHIVO&&PIDEN_SEMANAS.includes(ACTIVE_TAB)) aplicarSnapshot(window.ARCHIVO.snapshot()); };
+  try{ m.render(slot,{data:SNAPSHOT,filtros:filtrosActuales(),recargar}); }
+  catch(err){ console.error('[módulo '+ACTIVE_TAB+']',err);
+    slot.innerHTML='<div class="op-empty">Error al renderizar el módulo — ver consola.</div>'; }
+  /* red de seguridad: cualquier [data-graf] que el módulo no haya registrado
+     explícitamente también recibe su botón de expandir */
+  if(window.UIX) UIX.graficas(slot);
+  /* Entrada escalonada de los bloques del módulo. Se siembra DESPUÉS del
+     render, así que cubre por igual el cambio de pestaña y el cambio de
+     filtro (ambos pasan por aquí). Es puramente decorativa: los delays no
+     retrasan ningún dato ni bloquean el clic. */
+  if(window.UIX) UIX.entrada(slot.firstElementChild||slot);
+}
+
+function setTab(tab){
+  /* la pestaña Usuarios solo existe para super/admin (el backend revalida igual) */
+  if(tab==='usuarios'&&!(window.AUTH&&AUTH.esAdmin())) tab='habitos';
+  ACTIVE_TAB=tab;
+  document.querySelectorAll('#modTabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  const esEval=tab==='evaluacion', esAdmin=tab==='usuarios';
+  /* PETICIÓN 5 — el MISMO panel de filtros globales en Evaluación y en el
+     resto de módulos. Sólo Usuarios (administrativo) lo oculta. */
+  document.getElementById('panelFiltros').style.display=esAdmin?'none':'';
+  document.getElementById('panelDatos').style.display=esAdmin?'none':'';
+  /* Usuarios no usa filtros: se recupera el ancho completo para la tabla */
+  document.getElementById('sidebar').style.display=esAdmin?'none':'';
+  document.getElementById('moduloView').style.display=esEval?'none':'block';
+  if(esEval){
+    if(STATE.source) refresh();
+    else document.getElementById('emptyState').style.display='';
+  }else{
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('fleetView').style.display='none';
+    document.getElementById('opView').style.display='none';
+    renderActiveModule();
+  }
+  document.body.classList.remove('nav-open');
+}
+
+/* ---- tema + nav + modal ---- */
+function applyTheme(m){document.documentElement.setAttribute('data-theme',m);document.querySelector('meta[name=theme-color]').setAttribute('content',m==='dark'?'#17181A':'#63666A');if(document.getElementById('fleetView').style.display==='block'||document.getElementById('opView').style.display==='block')setTimeout(refresh,10);setTimeout(()=>{if(typeof renderActiveModule==='function'&&ACTIVE_TAB!=='evaluacion')renderActiveModule();},10);}
+(function(){const s=localStorage.getItem('rc-theme');applyTheme(s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));})();
+document.getElementById('themeBtn').onclick=()=>{const n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';localStorage.setItem('rc-theme',n);applyTheme(n);};
+document.getElementById('navToggle').onclick=()=>document.body.classList.toggle('nav-open');
+document.getElementById('scrim').onclick=()=>document.body.classList.remove('nav-open');
+
+/* ---- panel lateral plegable (escritorio) ----
+   Estado persistido, botón en el header + pestaña lateral + atajo "[".
+   Al terminar la transición se avisa a ECharts: `main` cambió de ancho. */
+const railBtn=document.getElementById('railToggle'), railPeek=document.getElementById('railPeek'),
+      sidebarEl=document.getElementById('sidebar');
+function aplicarRail(v,persistir){
+  document.body.classList.toggle('rail',v);
+  railBtn.setAttribute('aria-pressed',v?'true':'false');
+  railBtn.setAttribute('aria-label',v?'Mostrar el panel de filtros':'Ocultar el panel de filtros');
+  railBtn.title=(v?'Mostrar':'Ocultar')+' el panel de filtros  ·  atajo: [';
+  sidebarEl.setAttribute('aria-hidden',v?'true':'false');
+  railPeek.tabIndex=v?0:-1;
+  if(persistir!==false){ try{localStorage.setItem('rc-rail',v?'1':'0');}catch(e){} }
+  /* una sola llamada al final de la transición, no en cada frame */
+  clearTimeout(aplicarRail._t);
+  aplicarRail._t=setTimeout(()=>{ resizeAll(); }, REDUCED?0:300);
+}
+function toggleRail(){ aplicarRail(!document.body.classList.contains('rail')); }
+railBtn.onclick=toggleRail; railPeek.onclick=toggleRail;
+try{ if(localStorage.getItem('rc-rail')==='1') aplicarRail(true,false); }catch(e){}
+
+function openIO(){
+  const r=document.getElementById('ioResumen');
+  if(r){ const g=groupFilter(); r.innerHTML='Se exporta exactamente lo que estás viendo: <b>'+
+    rangeLabel()+'</b> · <b>'+(g==='__all'?'todos los grupos':g)+'</b> · <b>'+operators().length+'</b> operadores.'; }
+  document.body.classList.add('io-open');
+}
+function closeIO(){document.body.classList.remove('io-open');}
+document.getElementById('btnIO').onclick=()=>{document.body.classList.remove('nav-open');openIO();};
+
+/* ============ MONITOR VIVO de temperatura (2026-07-28, solo local) ============
+   Sondea /api/monitor-alertas del servidor local cada 60 s. En producción el
+   endpoint no existe: el chip permanece oculto. Los datos vienen de
+   get_incremental_events (ver connector/servidor_local.mjs). */
+(function(){
+  const btn=document.getElementById('btnMonitor'), num=document.getElementById('monitorN');
+  if(!btn)return;
+  let M=null;
+  /* ALERTA VISUAL por cada evento nuevo (petición del cliente 2026-07-28):
+     toasts rojos en cola, máx 3 por tanda + resumen. La primera carga no
+     dispara nada (serían las 24 h históricas de golpe). */
+  const vistas=new Set();
+  let primeraCarga=true;
+  const colaToast=[];
+  let toastAndando=false;
+  function claveAl(a){return a.id||(a.time+'|'+a.vehicle_id+'|'+a.evento);}
+  function horaLocalCorta(s){const d=new Date(/[Zz]$|[+\-]\d{2}:?\d{2}$/.test(s||'')?s:(s||'')+'Z');
+    return isNaN(d)?'':d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});}
+  function toastAlerta(html){colaToast.push(html);if(!toastAndando)siguienteToast();}
+  function siguienteToast(){
+    const t=document.getElementById('toast');
+    if(!colaToast.length){toastAndando=false;t.classList.remove('show','toast-alerta');return;}
+    toastAndando=true;
+    t.innerHTML=colaToast.shift();
+    t.classList.add('show','toast-alerta');
+    clearTimeout(t._t);
+    t._t=setTimeout(()=>{t.classList.remove('show');setTimeout(siguienteToast,350);},6000);
+  }
+  function anunciar(nuevas){
+    nuevas.slice(0,3).forEach(a=>{
+      toastAlerta((a.tipo==='panico'?'🚨 PÁNICO':'🌡 TEMPERATURA')+' · <b>'+
+        String(a.evento||'').replace(/[&<>]/g,'')+'</b><br>unidad '+(a.placa||a.vehicle_id)+
+        (a.conductor?' · '+a.conductor:'')+' · '+horaLocalCorta(a.time));
+    });
+    if(nuevas.length>3)toastAlerta('… y '+(nuevas.length-3)+' alerta(s) más — ver el chip Temp o la pestaña Alertas');
+  }
+  async function poll(){
+    try{
+      const r=await fetch('/api/monitor-alertas',{cache:'no-store'});
+      if(!r.ok)throw 0;
+      M=await r.json();
+      if(M.sinDatos){btn.hidden=true;return;}   // producción sin ningún push aún
+      btn.hidden=false;
+      num.textContent=M.alertas.length;
+      const nuevas=M.alertas.filter(a=>!vistas.has(claveAl(a)));
+      nuevas.forEach(a=>vistas.add(claveAl(a)));
+      if(!primeraCarga&&nuevas.length)anunciar(nuevas);
+      primeraCarga=false;
+      const sinSenal=M.desfaseMin!=null&&M.desfaseMin>6;   // >3 ticks sin push: la Mac no está empujando
+      btn.classList.toggle('hay',M.alertas.length>0&&!sinSenal);
+      btn.classList.toggle('pausa',!!M.pausadoPor||!!M.error||sinSenal);
+      btn.title=sinSenal?'Monitor SIN SEÑAL desde hace '+M.desfaseMin+' min (el agente local no está empujando)'
+        :M.error?'Monitor con error: '+M.error
+        :M.pausadoPor?'Monitor en pausa: la API la está usando '+M.pausadoPor
+        :'Monitor vivo · '+M.alertas.length+' alerta(s) HOY'+(M.dia?' ('+M.dia+')':'')+
+         ' · última consulta: '+(M.ultimaConsulta?horaLocal(M.ultimaConsulta)+' hora local':'aún no corre')+
+         ' · consulta cada 2 min · el histórico completo vive en la pestaña Alertas';
+    }catch(e){btn.hidden=true;}
+  }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  /* Traffilog manda las horas en UTC (API pág. 3): se convierten a la hora
+     LOCAL del navegador (CDMX = UTC−6) para que coincidan con el reloj del usuario. */
+  function horaLocal(s){
+    if(!s)return '—';
+    const d=new Date(/[Zz]$|[+\-]\d{2}:?\d{2}$/.test(s)?s:s+'Z');
+    if(isNaN(d))return s;
+    return d.toLocaleString('es-MX',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  }
+  btn.onclick=()=>{
+    if(!M)return;
+    document.getElementById('monEstado').innerHTML=
+      (M.pausadoPor?'⏸ En pausa (API ocupada por <b>'+esc(M.pausadoPor)+'</b>). Se reanuda solo.':
+       M.error?'Error: '+esc(M.error):
+       'Consultando Traffilog cada 2 minutos. Última: <b>'+esc(horaLocal(M.ultimaConsulta))+'</b> (hora local).')+
+      ' · <b>'+M.alertas.length+'</b> alerta(s) del día '+esc(M.dia||'en curso')+
+      ' — el contador se reinicia cada medianoche; el histórico completo está en la pestaña <b>Alertas</b>.';
+    document.getElementById('monLista').innerHTML=M.alertas.length?M.alertas.map(a=>
+      '<div class="mon-fila">'+
+      '<span class="mon-sev '+esc(a.severidad)+'">'+(a.tipo==='panico'?'PÁNICO':'TEMP')+'</span>'+
+      '<span><b>'+esc(a.evento)+'</b><br><span class="mono">unidad '+esc(a.placa||a.vehicle_id)+
+      (a.conductor?' · '+esc(a.conductor):'')+(a.spn?' · SPN '+esc(a.spn):'')+(a.fmi?' · '+esc(a.fmi):'')+'</span></span>'+
+      '<span class="mono">'+esc(horaLocal(a.time))+
+      (a.lat&&a.lng?'<br><a href="https://maps.google.com/?q='+esc(a.lat)+','+esc(a.lng)+'" target="_blank" rel="noopener">mapa</a>':'')+'</span>'+
+      '</div>').join(''):'<div class="field-note">Sin alertas de temperatura ni pánico por ahora. El chip se pondrá ROJO cuando entre una.</div>';
+    document.getElementById('monScrim').classList.add('on');
+    document.getElementById('monModal').classList.add('on');
+  };
+  const cerrarMon=()=>{document.getElementById('monScrim').classList.remove('on');document.getElementById('monModal').classList.remove('on');};
+  document.getElementById('monClose').onclick=cerrarMon;
+  document.getElementById('monScrim').onclick=cerrarMon;
+  poll();setInterval(poll,60e3);
+})();
+
+/* ============ IMPORTAR PADRÓN de unidades y operadores (2026-07-28) ============
+   Excel/CSV → {unidades[], conductores[]} (shape de connector/flota_snapshot.mjs)
+   → preview con conteos → ARCHIVO.setPadron (localStorage) → re-snapshot.
+   Encabezados flexibles es/en; heurística por hoja: placa⇒unidades, nombre⇒conductores. */
+(function(){
+  const $=id=>document.getElementById(id);
+  const norm=s=>String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');
+  const COLS_U={placa:['placa','plate','unidad','economico','eco','noeco','numeroeconomico'],
+    vehicle_id:['vehicleid','idvehiculo','idunidad','vid'],grupo:['grupo','group','flota','fleet'],
+    udn:['udn','base','sucursal','plaza','unidaddenegocio','un'],cliente:['cliente','client','proyecto']};
+  const COLS_C={conductor:['conductor','nombre','name','driver','operador','nombrecompleto','drivername'],
+    driver_id:['driverid','idconductor','idoperador','did'],
+    worker_id:['workerid','nomina','numempleado','noempleado','empleado'],
+    driver_code:['drivercode','codigo','llave','codigodmas','dmas'],
+    activo:['activo','status','estatus','estado'],grupo:['grupo','group','udn','base','sucursal','un']};
+  const UDN_MAP=[[/(guadalajara|gdl)/i,'Guadalajara'],[/(colima|col\b)/i,'Colima'],[/(lazaro|cardenas|lzc)/i,'Lázaro Cárdenas']];
+  const normUdn=v=>{const s=String(v||'');for(const [rx,u] of UDN_MAP)if(rx.test(s))return u;return s.trim();};
+  function mapear(hoja){
+    const filas=XLSX.utils.sheet_to_json(hoja,{header:1,raw:true,defval:null});
+    for(let h=0;h<Math.min(12,filas.length);h++){
+      const enc=(filas[h]||[]).map(norm);
+      const idx={},usa=(cols)=>{const m={};for(const campo in cols){const i=enc.findIndex(e=>cols[campo].includes(e));if(i>=0)m[campo]=i;}return m;};
+      const mu=usa(COLS_U),mc=usa(COLS_C);
+      const esU=mu.placa!=null,esC=mc.conductor!=null&&!esU;
+      if(!esU&&!esC)continue;
+      const out=[];let malas=0;
+      for(let i=h+1;i<filas.length;i++){
+        const f=filas[i]||[];const g=(m,k)=>m[k]!=null&&f[m[k]]!=null?String(f[m[k]]).trim():'';
+        if(esU){const placa=g(mu,'placa'),vid=g(mu,'vehicle_id');
+          if(!placa&&!vid){malas++;continue;}
+          out.push({vehicle_id:vid,placa:placa,grupo:g(mu,'grupo'),udn:normUdn(g(mu,'udn')),cliente:g(mu,'cliente')});
+        }else{const nom=g(mc,'conductor'),did=g(mc,'driver_id');
+          if(!nom&&!did){malas++;continue;}
+          const act=g(mc,'activo');
+          out.push({driver_id:did,conductor:nom.toUpperCase(),worker_id:g(mc,'worker_id'),
+            driver_code:g(mc,'driver_code'),grupo:g(mc,'grupo'),
+            activo:act?/^(si|sí|1|true|activo|alta)$/i.test(act):true});}
+      }
+      return {tipo:esU?'unidades':'conductores',filas:out,malas};
+    }
+    return null;
+  }
+  let PADRON_PEND=null;
+  function abrirPadron(html,pendiente){
+    PADRON_PEND=pendiente||null;
+    $('padronResumen').innerHTML=html;
+    $('padronAplicar').style.display=pendiente?'':'none';
+    $('padronQuitar').style.display=(window.ARCHIVO&&ARCHIVO.padronImportado)?'':'none';
+    $('padronScrim').classList.add('on');$('padronModal').classList.add('on');
+  }
+  function cerrarPadron(){$('padronScrim').classList.remove('on');$('padronModal').classList.remove('on');PADRON_PEND=null;}
+  async function procesar(file){
+    try{
+      const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+      const p={unidades:[],conductores:[]};let malas=0;const hojas=[];
+      wb.SheetNames.forEach(n=>{const r=mapear(wb.Sheets[n]);
+        if(r){p[r.tipo]=p[r.tipo].concat(r.filas);malas+=r.malas;hojas.push(n+' → '+r.tipo+' ('+r.filas.length+')');}});
+      if(!p.unidades.length&&!p.conductores.length){
+        abrirPadron('No encontré columnas de <b>placa/unidad</b> ni de <b>conductor/nombre</b> en ninguna hoja de <b>'+file.name+
+          '</b>. Hojas revisadas: '+wb.SheetNames.join(', ')+'.',null);return;}
+      /* diff contra lo que el portal ya conoce */
+      const snap=(window.ARCHIVO&&ARCHIVO.snapshot())||{};
+      const uCon=new Set((snap.unidades||[]).map(u=>String(u.vehicle_id||u.placa)));
+      const cCon=new Set((snap.drivers||[]).map(d=>String(d.conductor||'').toUpperCase().replace(/\s+/g,' ').trim()));
+      const uNew=p.unidades.filter(u=>!uCon.has(String(u.vehicle_id||u.placa))).length;
+      const cNew=p.conductores.filter(c=>!cCon.has(String(c.conductor||'').toUpperCase().replace(/\s+/g,' ').trim())).length;
+      abrirPadron('<b>'+esc2(file.name)+'</b><br>'+hojas.join('<br>')+'<br><br>'+
+        '<b>'+p.unidades.length+'</b> unidades ('+uNew+' nuevas · '+(p.unidades.length-uNew)+' ya conocidas)<br>'+
+        '<b>'+p.conductores.length+'</b> operadores ('+cNew+' nuevos · '+(p.conductores.length-cNew)+' ya conocidos)<br>'+
+        (malas?malas+' filas ignoradas (sin clave)':'')+
+        '<br><br>Nada se aplica hasta que confirmes.',{p,origen:file.name});
+    }catch(e){abrirPadron('Error al leer <b>'+esc2(file.name)+'</b>: '+esc2(e.message),null);}
+  }
+  function esc2(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  $('btnPadron').onclick=()=>{
+    const vig=window.ARCHIVO&&ARCHIVO.padronImportado;
+    if(vig){ /* ya hay padrón: mostrar estado + opción de quitar o sumar otro archivo */
+      abrirPadron('Padrón importado vigente'+(vig.origen?' (<b>'+esc2(vig.origen)+'</b>)':'')+':<br>'+
+        '<b>'+(vig.unidades||[]).length+'</b> unidades · <b>'+(vig.conductores||[]).length+'</b> operadores.'+
+        '<br><br>Puedes sumar otro archivo o quitar el importado.',null);
+      $('padronCancelar').textContent='Sumar otro archivo…';
+      $('padronCancelar').onclick=()=>{cerrarPadron();$('padronCancelar').textContent='Cancelar';$('padronCancelar').onclick=cerrarPadron;$('filePadron').value='';$('filePadron').click();};
+      return;
+    }
+    $('filePadron').value='';$('filePadron').click();
+  };
+  $('filePadron').addEventListener('change',e=>{if(e.target.files[0])procesar(e.target.files[0]);});
+  $('padronClose').onclick=cerrarPadron;$('padronScrim').onclick=cerrarPadron;$('padronCancelar').onclick=cerrarPadron;
+  $('padronAplicar').onclick=()=>{
+    if(!PADRON_PEND||!window.ARCHIVO)return cerrarPadron();
+    const n=ARCHIVO.setPadron(PADRON_PEND.p,PADRON_PEND.origen);
+    cerrarPadron();
+    aplicarSnapshot(ARCHIVO.snapshot());
+    toast('Padrón aplicado: '+n.unidades+' unidades · '+n.conductores+' operadores en el navegador');
+  };
+  $('padronQuitar').onclick=()=>{
+    if(window.ARCHIVO)ARCHIVO.quitarPadron();
+    cerrarPadron();
+    location.reload();   // FLOTA se repobla limpia desde flota.json/observado
+  };
+})();
+document.getElementById('ioClose').onclick=closeIO; document.getElementById('ioScrim').onclick=closeIO;
+document.getElementById('btnExportTop').onclick=openIO; document.getElementById('btnExportOp').onclick=openIO;
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){document.body.classList.remove('nav-open');closeIO();return;}
+  /* atajos globales: sólo fuera de campos de texto y sin modificadores */
+  const t=e.target, editable=t&&(t.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName));
+  if(editable||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==='['){ e.preventDefault(); toggleRail(); }
+});
+document.getElementById('btnBack').onclick=()=>seleccionarOperador('');
+
+/* ---- init ---- */
+/* releer manual eliminado — el archivo se re-sincroniza solo cada 10 min */
+const _btnR=document.getElementById('btnReload');
+if(_btnR)_btnR.onclick=async()=>{_btnR.classList.add('girando');try{await cargarArchivo(true);toast('Datos recargados');}catch(e){toast('No se pudo recargar');}finally{_btnR.classList.remove('girando');}};
+setInterval(()=>cargarArchivo(true), 10*60e3);
+/* La pestaña vuelve al frente después de horas (la laptop durmió): el intervalo
+   no corrió y los números serían de ayer. Se re-sincroniza al reaparecer, con
+   un piso de 2 min para no golpear el archivo en cada alt-tab. (2026-08-08) */
+let _ultSync=Date.now();
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  if(Date.now()-_ultSync<2*60e3)return;
+  _ultSync=Date.now();
+  cargarArchivo(true).catch(()=>{});
+});
+document.getElementById('expXlsx').onclick=expXlsx;document.getElementById('expCsv').onclick=expCsv;document.getElementById('expJson').onclick=expJson;
+
+/* ---- init módulos Fase 2: tabs + filtros globales ----
+   Cada pestaña recibe su icono de dos tonos desde el registro ICONOS. Se
+   inyecta al arrancar (no en el HTML) para que exista UNA sola definición de
+   cada glifo, en aplicacion/iconos.js. */
+document.querySelectorAll('#modTabs button').forEach(b=>{
+  const n=b.dataset.ic;
+  if(n&&window.ICONOS&&ICONOS.tiene(n)) b.insertAdjacentHTML('afterbegin','<span class="tic" aria-hidden="true">'+ICONOS.svg(n)+'</span>');
+  b.addEventListener('click',()=>setTab(b.dataset.tab));
+});
+[['gfUdn','udn'],['gfCliente','cliente'],['gfOperador','operador'],['gfVehiculo','vehiculo']].forEach(([id,k])=>
+  document.getElementById(id).addEventListener('change',e=>{FILTROS[k]=e.target.value;
+    /* Evaluación consume los mismos filtros: refresh() decide a quién repintar */
+    if(ACTIVE_TAB==='evaluacion')SELECTED=FILTROS.operador||null;
+    renderActiveModule();}));
+/* Filtro 6 — fechas. Trae del archivo local las semanas que caigan en el rango
+   antes de re-renderizar (carga perezosa: solo lo que el filtro pide). */
+document.getElementById('gfDesde').addEventListener('change',e=>{FILTROS.desde=e.target.value||null;
+  asegurarPeriodo(FILTROS.desde,FILTROS.hasta).then(n=>{if(!n)renderActiveModule();});renderActiveModule();});
+document.getElementById('gfHasta').addEventListener('change',e=>{FILTROS.hasta=e.target.value||null;
+  asegurarPeriodo(FILTROS.desde,FILTROS.hasta).then(n=>{if(!n)renderActiveModule();});renderActiveModule();});
+document.getElementById('gfLimpiar').addEventListener('click',()=>{
+  Object.assign(FILTROS,{udn:'',cliente:'',operador:'',vehiculo:'',desde:null,hasta:null,semanaActual:false});
+  FILTROS.eventos.length=0; FILTROS.semanasComparar.length=0;
+  ['gfUdn','gfCliente','gfOperador','gfVehiculo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('gfDesde').value=''; document.getElementById('gfHasta').value='';
+  document.querySelectorAll('#gfEventos .chip,#gfEventosExt .chip').forEach(c=>c.classList.remove('on'));
+  /* limpiar NO es "todo el histórico": vuelve al default del portal — la semana
+     en curso a día vencido (petición del cliente 2026-07-25). */
+  aplicarPeriodoDefault();
+  toast('Filtros al valor por defecto: semana en curso a día vencido');});
+/* ---- BOTÓN "DÍA VENCIDO" (petición 2026-07-26) --------------------------
+   Manual del corte diario: baja la semana en curso hasta ayer, la enriquece,
+   re-atribuye y recarga. El automático corre a las 9:00 (launchd). El gatillo
+   vive en el servidor LOCAL (connector/servidor_local.mjs); en producción no
+   existe y el botón lo dice en vez de fingir. */
+(function(){
+  const b=document.getElementById('btnDiaVencido'); if(!b) return;
+  const rotulo=b.querySelector('span');
+  let vigilando=false;
+  async function estado(){ try{ const r=await fetch('/api/refresco-estado',{cache:'no-store'});
+    return r.ok?await r.json():null; }catch(e){ return null; } }
+  async function vigilar(){ if(vigilando) return; vigilando=true; b.disabled=true;
+    while(true){ await new Promise(r=>setTimeout(r,5000));
+      const e=await estado(); if(!e){ rotulo.textContent='Día vencido'; break; }
+      if(!e.corriendo){
+        vigilando=false; b.disabled=false;
+        if(e.codigo===0){ rotulo.textContent='¡Al día! recargando…'; toast('Corte a día vencido listo — recargando');
+          setTimeout(()=>location.reload(),1200); }
+        else { rotulo.textContent='Falló — ver log'; b.classList.add('err');
+          toast('El refresco falló; revisa /tmp/refresco_diario.log'); }
+        return; }
+      rotulo.textContent='Actualizando…'; }
+    vigilando=false; b.disabled=false; }
+  b.addEventListener('click', async ()=>{
+    b.classList.remove('err');
+    let r=null; try{ r=await fetch('/api/refrescar',{method:'POST'}); }catch(e){}
+    if(!r){ toast('El corte manual solo existe en el portal LOCAL de la oficina (el servidor de producción no ejecuta descargas).'); return; }
+    if(r.status===409){ toast('Ya hay un refresco corriendo — esperando a que termine.'); }
+    else if(!r.ok){ toast('No se pudo lanzar el refresco.'); return; }
+    else toast('Refresco lanzado: semana en curso a día vencido (~30-60 min).');
+    vigilar(); });
+  /* si el de las 9:00 quedó corriendo, el botón lo refleja al abrir */
+  estado().then(e=>{ if(e&&e.corriendo) vigilar(); });
+})();
+
+/* alinear la barra de tabs pegajosa con la altura real del header */
+(function(){const h=document.querySelector('header');const t=document.getElementById('modTabs');
+  const fit=()=>{t.style.top=(h.offsetHeight+2)+'px';};fit();addEventListener('resize',fit);})();
+
+/* ---- arranque: NADA se carga hasta que hay sesión válida (docs/AUTH.md) ----
+   AUTH.alAutenticar dispara cuando /auth-me devuelve 200 o cuando el bypass de
+   desarrollo local está activo (solo en localhost/127.0.0.1, ver auth.js). */
+window.AUTH.alAutenticar(function(usuario){
+  pintarIconosEstaticos();          // iconos del marcado estático, desde el registro único
+  setTab('panorama');   // Panorama es la portada del portal (KPIs por UDN y cliente)
+  if(CFG.AUTOCONNECT) cargarArchivo(false).then(ok=>{ if(!ok) console.info('[portal] revisa datos/historico/indice.json'); });
+  const p=(usuario&&usuario.udn_permitidas)||[];
+  if(p.length) console.info('[portal] alcance del usuario limitado a UDN:',p.join(', '));
+});
+</script>
+</body>
+</html>

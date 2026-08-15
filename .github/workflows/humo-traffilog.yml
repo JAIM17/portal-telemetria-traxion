@@ -1,0 +1,38 @@
+name: Humo · ¿Traffilog responde desde GitHub Actions?
+
+# PRUEBA DE HUMO, correr ANTES de confiar el corrido diario a la nube.
+#
+# Por qué existe: el repo hermano (portal_nacional_indicadores_operativos) tuvo
+# que dejar su corrido en una Mac porque Mindtrax devuelve HTTP 403 a las IPs de
+# datacenter de GitHub. Traffilog NO parece tener ese bloqueo — la función
+# programada de Netlify le pega cada hora desde datacenter sin problema — pero
+# eso hay que COMPROBARLO desde estas IPs antes de apagar la máquina local.
+#
+# Se lanza a mano: Actions → este workflow → "Run workflow".
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  humo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Login y una consulta mínima
+        env:
+          TRAFFILOG_USER: ${{ secrets.TRAFFILOG_USER }}
+          TRAFFILOG_PASS: ${{ secrets.TRAFFILOG_PASS }}
+          TRAFFILOG_REST_URL: ${{ secrets.TRAFFILOG_REST_URL }}
+        run: |
+          node --input-type=module -e '
+            import { login, fetchFleet, normFleet } from "./netlify/functions/lib/core.mjs";
+            const o = { url: process.env.TRAFFILOG_REST_URL };
+            const tok = await login(process.env.TRAFFILOG_USER, process.env.TRAFFILOG_PASS, o);
+            if (!tok) { console.error("✗ login sin token"); process.exit(1); }
+            const flota = normFleet(await fetchFleet(tok, o));
+            console.log("✓ login ok · flota:", flota.length, "unidades");
+            if (!flota.length) { console.error("✗ la flota vino vacía: revisar credenciales o bloqueo por IP"); process.exit(1); }
+          '

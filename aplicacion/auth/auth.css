@@ -1,0 +1,151 @@
+/* ============================================================================
+ * AUTENTICACIÓN — pantalla de acceso + chip de sesión (TRAXION / LIPU)
+ * Reutiliza las CSS variables del portal (index.html): claro/oscuro automático.
+ *   --lime --lime-dark --lime-bright --lime-soft --gray --gray-d --bg --panel
+ *   --panel2 --panel-in --line --line-strong --hair --grid --txt --muted
+ *   --faint --ok --warn --bad --shadow --shadow-lg --radius --mono --cond
+ * ========================================================================== */
+
+/* `hidden` debe ganar a los display: de los componentes (tabs, flex, grid…) */
+[hidden]{display:none !important}
+
+/* Mientras se resuelve la sesión el dashboard no se pinta (anti-flash). */
+html.auth-pendiente body>header.app-header,
+html.auth-pendiente body>.layout,
+html.auth-pendiente body>.modal,
+html.auth-pendiente body>.modal-scrim,
+html.auth-pendiente body>.scrim{visibility:hidden !important}
+html.auth-pendiente{overflow:hidden}
+
+/* ------------------------------------------------------------------- el gate */
+.auth-gate{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+  padding:clamp(14px,4vw,40px);background:var(--bg);overflow:auto;
+  animation:auth-fade .34s var(--ease-out,ease-out)}
+@keyframes auth-fade{from{opacity:0}to{opacity:1}}
+/* retícula técnica + resplandor de señal (misma firma visual del portal) */
+.auth-gate::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:46px 46px}
+.auth-gate::after{content:"";position:absolute;top:-32%;left:50%;transform:translateX(-50%);
+  width:120vw;height:66vh;pointer-events:none;
+  background:radial-gradient(60% 60% at 50% 0%,rgba(208,223,0,.16),transparent 70%)}
+:root[data-theme="dark"] .auth-gate::after{background:radial-gradient(60% 60% at 50% 0%,rgba(208,223,0,.13),transparent 70%)}
+
+.auth-card{position:relative;z-index:1;width:min(880px,100%);display:grid;
+  grid-template-columns:1.02fr .98fr;border:1px solid var(--line-strong);
+  border-radius:var(--radius,10px);overflow:hidden;background:var(--panel);
+  box-shadow:var(--shadow-lg);animation:auth-rise .5s var(--ease-out,ease-out) both}
+@keyframes auth-rise{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
+
+/* ------------------------------------------------------- panel de identidad */
+.auth-brand{position:relative;background:var(--gray);color:#fff;padding:30px 28px 26px;
+  display:flex;flex-direction:column;gap:20px;min-height:400px}
+/* Filo de marca: una regla lima SÓLIDA y continua, igual que header.app-header.
+   El trazo segmentado anterior era decoración interrumpida (tell de IA), no dato. */
+.auth-brand::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:var(--lime)}
+.auth-brand::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:26px 26px}
+.auth-brand>*{position:relative;z-index:1}
+.auth-brand img.lipu{height:40px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.45))}
+.auth-brand h1{margin:0;font-family:var(--cond);font-size:clamp(23px,3vw,31px);font-weight:900;
+  line-height:1.02;letter-spacing:.4px;text-transform:uppercase}
+.auth-brand .auth-kicker{font-family:var(--mono);font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--lime-bright);font-weight:600;display:flex;align-items:center;gap:8px}
+/* regla de cierre del kicker: hairline lima SÓLIDA (antes era punteada) */
+.auth-brand .auth-kicker::after{content:"";flex:1;height:1px;
+  background:rgba(208,223,0,.42)}
+.auth-brand .auth-lead{font-size:12.5px;color:rgba(255,255,255,.78);line-height:1.62;max-width:34ch;margin:0}
+
+/* ficha técnica mono */
+.auth-spec{margin-top:auto;display:grid;gap:0;border-top:1px solid rgba(255,255,255,.15)}
+.auth-spec div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,.09);font-family:var(--mono);font-size:10px;
+  letter-spacing:.5px;text-transform:uppercase}
+.auth-spec div:last-child{border-bottom:0}
+.auth-spec dt,.auth-spec span.k{color:rgba(255,255,255,.5)}
+.auth-spec span.v{color:var(--lime-bright);font-weight:600;text-align:right}
+
+/* barras de señal decorativas */
+.auth-signal{display:flex;align-items:flex-end;gap:3px;height:26px}
+.auth-signal i{width:5px;background:var(--lime);border-radius:1px;opacity:.85;
+  animation:auth-bar 2.4s var(--ease-io,ease-in-out) infinite}
+.auth-signal i:nth-child(1){height:30%;animation-delay:0s}
+.auth-signal i:nth-child(2){height:62%;animation-delay:.14s}
+.auth-signal i:nth-child(3){height:44%;animation-delay:.28s}
+.auth-signal i:nth-child(4){height:88%;animation-delay:.42s}
+.auth-signal i:nth-child(5){height:52%;animation-delay:.56s}
+.auth-signal i:nth-child(6){height:72%;animation-delay:.7s}
+@keyframes auth-bar{0%,100%{transform:scaleY(1);opacity:.85}50%{transform:scaleY(.45);opacity:.4}}
+.auth-signal i{transform-origin:bottom}
+@media(prefers-reduced-motion:reduce){.auth-signal i{animation:none}.auth-card,.auth-gate{animation:none}}
+
+/* ------------------------------------------------------------ panel del form */
+.auth-form{padding:30px 28px 26px;display:flex;flex-direction:column;gap:16px;background:var(--panel)}
+/* el contenido real vive dentro de #authFormWrap: su propio ritmo vertical */
+.auth-form>div#authFormWrap{display:flex;flex-direction:column;gap:15px}
+.auth-form h2{margin:0;font-family:var(--cond);font-size:19px;font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.auth-form .auth-sub{font-family:var(--mono);font-size:10px;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--faint);margin:-11px 0 0}
+.auth-field{display:flex;flex-direction:column;gap:6px}
+.auth-field label{font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);font-weight:600}
+.auth-input{position:relative;display:flex;align-items:center}
+.auth-input svg{position:absolute;left:11px;width:16px;height:16px;color:var(--faint);pointer-events:none}
+.auth-input input{width:100%;min-height:44px;padding:10px 12px 10px 36px;border-radius:var(--radius-sm,8px);
+  border:1px solid var(--line-strong);background:var(--panel-in);color:var(--txt);
+  font-family:var(--mono);font-size:13.5px;letter-spacing:.3px;
+  transition:border-color .18s var(--ease-out,ease),box-shadow .18s var(--ease-out,ease)}
+.auth-input input:focus{outline:none;border-color:var(--lime-dark);box-shadow:0 0 0 3px var(--lime-soft)}
+.auth-input input::placeholder{color:var(--faint);letter-spacing:.2px}
+.auth-input .auth-ver{position:absolute;right:6px;width:32px;height:32px;border-radius:6px;border:0;
+  background:transparent;color:var(--faint);cursor:pointer;display:grid;place-items:center}
+.auth-input .auth-ver:hover{color:var(--txt);background:var(--panel2)}
+.auth-input .auth-ver svg{position:static;width:16px;height:16px;color:inherit}
+
+.auth-msg{display:none;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:var(--radius-sm,8px);
+  font-family:var(--mono);font-size:11px;line-height:1.55;border:1px solid;letter-spacing:.2px}
+.auth-msg.show{display:flex;animation:auth-shake .3s var(--ease-out,ease)}
+.auth-msg svg{width:15px;height:15px;flex-shrink:0;margin-top:1px}
+.auth-msg.err{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent);
+  background:color-mix(in srgb,var(--bad) 9%,transparent)}
+.auth-msg.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent);
+  background:color-mix(in srgb,var(--warn) 9%,transparent)}
+.auth-msg.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent);
+  background:color-mix(in srgb,var(--ok) 9%,transparent)}
+@keyframes auth-shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.auth-form .btn[disabled]{opacity:.55;cursor:progress;filter:grayscale(.3)}
+.auth-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* estado "comprobando sesión" */
+.auth-boot{position:relative;z-index:1;display:flex;align-items:center;gap:12px;
+  font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.auth-boot .auth-signal i{background:var(--lime-dark)}
+
+@media(max-width:720px){
+  .auth-card{grid-template-columns:1fr}
+  .auth-brand{min-height:0;padding:24px 22px 20px;gap:14px}
+  .auth-brand .auth-lead,.auth-spec{display:none}
+  .auth-form{padding:22px 20px 20px}
+}
+
+/* --------------------------------------------------- chip de sesión (header) */
+.auth-chip{display:flex;align-items:center;gap:9px;padding:5px 11px 5px 5px;border-radius:7px;
+  border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.08);color:#fff;max-width:230px}
+.auth-chip .ini{width:28px;height:28px;border-radius:5px;background:var(--lime);color:var(--on-lime);
+  display:grid;place-items:center;font:900 11px var(--cond);letter-spacing:.4px;flex-shrink:0}
+.auth-chip .txt{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.auth-chip .txt b{font:700 11.5px var(--cond);letter-spacing:.3px;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* el rol es el dato que distingue superusuario de lector: a .6 daba 2.89:1 */
+.auth-chip .txt small{font-family:var(--mono);font-size:8.5px;letter-spacing:.8px;text-transform:uppercase;
+  color:rgba(255,255,255,.86)}
+.auth-chip.dev{border-color:rgba(224,172,60,.55);background:rgba(224,172,60,.14)}
+.auth-chip.dev .ini{background:#E0AC3C}
+@media(max-width:900px){.auth-chip .txt{display:none}.auth-chip{padding:5px}}

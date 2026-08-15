@@ -1,0 +1,536 @@
+/* ============================================================================
+ * MÓDULO 2 — CARGAS DE TRABAJO / FATIGA · lenguaje visual DASHTRAX (TRAXION/LIPU)
+ * Usa las CSS variables del portal (index.html):
+ *   --lime --lime-dark --lime-bright --lime-soft --gray --bg --panel --panel2
+ *   --panel-in --line --line-strong --hair --txt --muted --faint
+ *   --ok --warn --high --bad --shadow --radius --radius-sm --mono --cond
+ *   --ease-out --ease-io   (claro/oscuro automático vía [data-theme])
+ * Fallbacks incluidos por si el módulo se monta fuera del portal.
+ * ========================================================================== */
+
+.cf-mod{
+  --cf-mono: var(--mono, 'IBM Plex Mono', ui-monospace, Menlo, monospace);
+  --cf-cond: var(--cond, 'Roboto Condensed', 'Arial Narrow', sans-serif);
+  --cf-lime: var(--lime, #D0DF00);
+  --cf-lime-d: var(--lime-dark, #B5BD00);
+  --cf-ok:   var(--sem-ok,   #3E8E41);
+  --cf-warn: var(--sem-warn, #EDC531);
+  --cf-high: var(--sem-high, #EE8B36);
+  --cf-bad:  var(--sem-bad,  #D93F37);
+  --cf-line: var(--line, #D5D7CC);
+  --cf-panel: var(--panel,#FFFFFF);
+  --cf-in: var(--panel-in, #fff);
+  --cf-txt: var(--txt, #22242A);
+  --cf-muted: var(--muted, #61645F);
+  --cf-faint: var(--faint,#666860);
+  --cf-r: var(--radius, 10px);
+  --cf-cell: 15px;         /* lado de la celda del calendario */
+  --cf-namew: 208px;       /* columna de nombre del calendario */
+  display:flex; flex-direction:column; gap:var(--gap-bloque,38px);
+  color:var(--cf-txt);
+  animation:cf-in .38s var(--ease-out, cubic-bezier(.22,1,.36,1));
+}
+@keyframes cf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- iconos dos tonos ---------- */
+.cf-ic{display:inline-grid;place-items:center;width:20px;height:20px;flex:0 0 20px;--ic-accent:var(--cf-lime-d)}
+.cf-ic svg{width:19px;height:19px;overflow:visible}
+.cf-ic .dash-icon-main{stroke:var(--cf-muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cf-ic .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============================== CABECERA ================================= */
+.cf-head{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:flex-end;justify-content:space-between;
+  border-bottom:1px solid var(--cf-line);padding-bottom:11px}
+.cf-title{font-family:var(--cf-cond);font-weight:900;font-size:22px;letter-spacing:.4px;
+  text-transform:uppercase;margin:0;line-height:1.05}
+.cf-title em{color:var(--cf-muted);font-style:normal;font-weight:700}
+.cf-sub{font-family:var(--cf-mono);font-size:10px;letter-spacing:.55px;text-transform:uppercase;
+  color:var(--cf-faint);margin-top:6px}
+.cf-head-l{min-width:0;flex:1 1 auto}
+.cf-head-r{flex:0 0 auto}
+
+/* segmentado: jornada mínima */
+.cf-seg{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line-strong,#C3C5B8);
+  border-radius:8px;background:var(--cf-panel);overflow:hidden}
+.cf-seg-l{font-family:var(--cf-mono);font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--cf-faint);padding:0 11px;border-right:1px solid var(--cf-line);align-self:stretch;display:flex;align-items:center}
+.cf-seg-b{border:0;background:transparent;color:var(--cf-muted);cursor:pointer;
+  font:700 10.5px/1 var(--cf-mono);letter-spacing:.4px;padding:9px 12px;white-space:nowrap;
+  border-left:1px solid transparent;transition:background .16s var(--ease-out,ease),color .16s var(--ease-out,ease)}
+.cf-seg-b+.cf-seg-b{border-left-color:var(--cf-line)}
+.cf-seg-b:hover{background:var(--lime-soft,rgba(208,223,0,.14));color:var(--cf-txt)}
+.cf-seg-b.on{background:var(--cf-lime);color:var(--on-lime)}
+
+/* criterio de jornada — indicador ESTÁTICO (el cliente fijó el corte en 3 h) */
+.cf-crit{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line-strong,#C3C5B8);
+  border-radius:8px;background:var(--cf-panel);overflow:hidden}
+.cf-crit-l{font-family:var(--cf-mono);font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--cf-faint);padding:8px 11px;border-right:1px solid var(--cf-line)}
+.cf-crit-v{font-family:var(--cf-mono);font-size:10.5px;font-weight:700;letter-spacing:.4px;
+  color:var(--cf-txt);padding:8px 12px;white-space:nowrap}
+
+/* ================================ KPIs =================================== */
+/* auto-fit: la fila pasó de 5 a 7 KPIs al separar conducción de ralentí; fijar el
+   número de columnas obligaba a tocar esto en cada cambio. */
+.cf-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--gap-card,30px);align-items:stretch}
+@media (max-width:1000px){.cf-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.cf-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* SIN franja lateral de color: el estado lo llevan la cifra y el icono. */
+.cf-kpi{background:var(--tile-bg,var(--cf-panel));border:1px solid var(--cf-line);border-radius:var(--cf-r);
+  padding:var(--pad-kpi,20px 22px);position:relative;overflow:hidden;box-shadow:var(--shadow,0 1px 0 rgba(58,60,63,.04));
+  display:flex;flex-direction:column;min-width:0;
+  transition:transform .18s var(--ease-out,ease),box-shadow .18s var(--ease-out,ease),border-color .18s var(--ease-out,ease)}
+.cf-kpi:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--cf-lime-d) 45%,var(--cf-line));
+  box-shadow:0 6px 18px color-mix(in srgb,var(--gray,#63666A) 16%,transparent)}
+.cf-kpi.warn .cf-ic{--ic-accent:var(--cf-warn)}
+.cf-kpi.bad .cf-ic{--ic-accent:var(--cf-bad)}
+.cf-kpi.ok .cf-ic{--ic-accent:var(--cf-ok)}
+.cf-kpi.high .cf-ic{--ic-accent:var(--cf-high)}
+.cf-kpi-top{display:flex;align-items:flex-start;gap:7px;min-height:30px}
+/* El tile se pinta con --tile-bg (#FFF en claro, #63666A en oscuro), así que sus
+   textos deben usar los tokens --tile-* — los del panel (--cf-muted/--cf-faint)
+   caían a 1.65:1 sobre el gris. Fallback al token de panel si no hay tile. */
+.cf-kpi .l{font-family:var(--cf-mono);font-size:9px;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--tile-muted,var(--cf-muted));line-height:1.35;padding-top:2px}
+.cf-kpi .v{font-family:var(--cf-mono);font-weight:700;font-size:27px;letter-spacing:-1px;
+  font-variant-numeric:tabular-nums;line-height:1;margin-top:8px;color:var(--tile-txt,var(--cf-txt))}
+.cf-kpi .v small{font-size:13px;letter-spacing:0;color:var(--tile-faint,var(--cf-faint));font-weight:500;margin-left:2px}
+.cf-kpi.warn .v{color:var(--cf-warn)}
+.cf-kpi.bad .v{color:var(--cf-bad)}
+.cf-kpi.high .v{color:var(--cf-high)}
+.cf-kpi .s{font-family:var(--cf-mono);font-size:9.5px;color:var(--tile-faint,var(--cf-faint));margin-top:6px;line-height:1.35}
+
+/* ============================== LEYENDA ================================== */
+.cf-leyenda{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;
+  padding:9px 12px;border:1px dashed var(--cf-line);border-radius:var(--cf-r);background:var(--panel2,transparent)}
+.cf-ley-grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cf-ley-t{font-family:var(--cf-mono);font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--cf-faint);margin-right:2px}
+.cf-ley{font-family:var(--cf-mono);font-size:9.5px;font-weight:700;letter-spacing:.5px;
+  padding:3px 8px;border-radius:4px;border:1px solid transparent;white-space:nowrap}
+.cf-ley-k{display:inline-flex;align-items:center;gap:3px;font-family:var(--cf-mono);font-size:9.5px;
+  color:var(--cf-muted);white-space:nowrap;margin-right:4px}
+.cf-ley-k i{display:inline-block;width:11px;height:11px;border-radius:2px;position:relative}
+.cf-ley-k i+i{margin-left:-1px}
+.cf-ley-note{font-family:var(--cf-mono);font-size:9.5px;color:var(--cf-faint);letter-spacing:.2px;
+  flex:1 1 260px;line-height:1.55;min-width:220px}
+
+/* semáforo — set DEDICADO del portal (badge · leyenda · alertas · cintas).
+   Fondo/borde usan los tinte/borde OPACOS del semáforo (--*-tint/--*-edge,
+   mezclados sobre --panel), así el contraste del texto NO depende del fondo
+   donde caiga el chip (panel, panel2 o card). El texto usa la tinta AA
+   --cf-* (=--ok/--warn/--high/--bad). Verificado ≥4.5:1 en claro y oscuro. */
+/* SÓLIDOS (petición del cliente): la fila crítica y el chip de riesgo llevan
+   fondo pleno del semáforo con tinta AA sobre él — nada de tintes acuosos. */
+.sem-verde   {background:var(--sem-ok-solid,var(--cf-ok));   color:var(--sem-ok-on,#fff);   border-color:transparent}
+.sem-amarillo{background:var(--sem-warn-solid,var(--cf-warn)); color:var(--sem-warn-on,#3B2F00); border-color:transparent}
+.sem-naranja {background:var(--sem-high-solid,var(--cf-high)); color:var(--sem-high-on,#401E00); border-color:transparent}
+.sem-rojo    {background:var(--sem-bad-solid,var(--cf-bad));  color:var(--sem-bad-on,#fff);  border-color:transparent}
+
+/* ============================== ALERTAS ================================== */
+/* Panel de alertas SIN barra lateral. La gravedad la anuncian el icono con su
+   acento y el propio título, que ya dice qué pasa. */
+.cf-alertas{background:var(--cf-panel);border:1px solid var(--cf-line);
+  border-radius:var(--cf-r);padding:var(--pad-card,22px 24px);box-shadow:var(--shadow,none)}
+.cf-alertas.ok .cf-ic{--ic-accent:var(--cf-ok)}
+.cf-alertas .cf-ic{--ic-accent:var(--cf-bad)}
+.cf-alertas-t{display:flex;align-items:center;gap:8px;font-family:var(--cf-cond);font-weight:900;font-size:13.5px;
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:9px}
+.cf-alertas.ok .cf-alertas-t{margin-bottom:0;color:var(--cf-ok)}
+.cf-alertas-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:6px}
+.cf-alerta{display:grid;grid-template-columns:46px 1fr;gap:11px;align-items:center;padding:8px 11px;border-radius:7px;
+  border:1px solid transparent;text-align:left;cursor:pointer;width:100%;font:inherit;
+  transition:transform .14s var(--ease-out,ease)}
+.cf-alerta:hover{transform:translateX(2px)}
+.cf-alerta-racha{font-family:var(--cf-mono);font-weight:700;font-size:20px;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-1px;text-align:center}
+.cf-alerta-racha small{font-size:11px;letter-spacing:0;opacity:.7}
+.cf-alerta-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cf-alerta-txt b{font-family:var(--cf-cond);font-weight:900;font-size:13.5px;letter-spacing:.2px;color:var(--cf-txt);
+  line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cf-alerta-txt i{font-style:normal;font-family:var(--cf-mono);font-size:9.5px;letter-spacing:.3px;
+  color:var(--cf-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.cf-alerta-mas{font-family:var(--cf-mono);font-size:10px;color:var(--cf-faint);padding:6px 10px;align-self:center}
+/* Sobre fondo SÓLIDO del semáforo (sem-rojo/naranja/amarillo) el texto interior
+   heredaba --cf-txt/--cf-muted: gris oscuro sobre rojo = ilegible (crítica del
+   cliente). Todo hereda el color "on" de la fila; el detalle baja opacidad. */
+.cf-alerta[class*="sem-"] .cf-alerta-txt b{color:inherit}
+.cf-alerta[class*="sem-"] .cf-alerta-txt i{color:inherit;opacity:.9}
+
+/* ============================== PANELES ================================== */
+.cf-panel{background:var(--cf-panel);border:1px solid var(--cf-line);border-radius:var(--cf-r);
+  padding:12px 14px 14px;box-shadow:var(--shadow,none);min-width:0}
+.cf-panel-t{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-family:var(--cf-mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--cf-muted);margin-bottom:11px}
+.cf-panel-leg{display:inline-flex;align-items:center;gap:5px;font-weight:500;letter-spacing:.4px;
+  margin-left:auto;color:var(--cf-faint);text-transform:none;font-size:9.5px}
+.cf-panel-leg i{display:inline-block}
+.cf-panel-leg .lg-bar{width:9px;height:9px;border-radius:2px;background:var(--cf-lime-d)}
+.cf-panel-leg .lg-ghost{width:9px;height:9px;border-radius:2px;background:color-mix(in srgb,var(--cf-muted) 22%,transparent);margin-left:7px}
+.cf-panel-leg .lg-line{width:13px;height:2px;border-radius:1px;background:var(--cf-lime);margin-left:7px}
+.cf-count{font-family:var(--cf-mono);background:var(--cf-in);border:1px solid var(--cf-line);
+  border-radius:4px;padding:1px 7px;font-size:10px;color:var(--cf-muted)}
+
+.cf-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--gap-card,30px);align-items:stretch}
+.cf-grid3 .cf-panel{display:flex;flex-direction:column;
+  transition:border-color .18s var(--ease-out,ease),box-shadow .18s var(--ease-out,ease)}
+.cf-grid3 .cf-panel:hover{border-color:color-mix(in srgb,var(--cf-lime-d) 38%,var(--cf-line));
+  box-shadow:0 4px 16px color-mix(in srgb,var(--gray,#63666A) 12%,transparent)}
+.cf-grid3 .cf-svg,.cf-grid3 .cf-hist{margin-top:auto}
+
+/* --------------------------- SVG compartido ------------------------------ */
+.cf-svg{width:100%;height:auto;display:block}
+.cf-grid{stroke:var(--cf-line);stroke-width:1;stroke-dasharray:3 4}
+.cf-ax{font:500 8.5px var(--cf-mono);fill:var(--cf-faint)}
+.cf-ax-l{text-anchor:end}
+.cf-ax-r{text-anchor:start}
+.cf-ax-c{text-anchor:middle}
+.cf-ax-strong{fill:var(--cf-txt);font-weight:700;font-size:9px}
+.cf-ax-dim{fill:var(--cf-faint);opacity:.75;font-size:8px}
+.cf-bar{fill:var(--cf-lime-d)}
+.cf-bar.warm{fill:var(--cf-high)}
+.cf-bar.hot{fill:var(--cf-bad)}
+.cf-bar-ghost{fill:color-mix(in srgb,var(--cf-muted) 26%, transparent)}
+.cf-line{fill:none;stroke:var(--cf-lime);stroke-width:2.8;stroke-linejoin:round;stroke-linecap:round}
+.cf-dot{fill:var(--cf-lime);stroke:var(--cf-panel);stroke-width:1.5}
+
+/* --------------------------- histograma rachas --------------------------- */
+.cf-hist{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:end;height:152px;padding-top:4px}
+.cf-hist-col{display:flex;flex-direction:column;height:100%;gap:5px;min-width:0}
+.cf-hist-n{font-family:var(--cf-mono);font-size:11px;font-weight:700;text-align:center;
+  font-variant-numeric:tabular-nums;color:var(--cf-txt)}
+.cf-hist-bar-wrap{flex:1;display:flex;align-items:flex-end}
+.cf-hist-bar{width:100%;border-radius:3px 3px 1px 1px;border:1px solid;
+  animation:cf-grow .5s var(--ease-out,cubic-bezier(.22,1,.36,1)) both;transform-origin:bottom}
+/* el semáforo compartido usa fondos al 14% (legible como badge, invisible como barra) */
+.cf-hist-bar.sem-verde   {background:var(--sem-ok,var(--cf-ok))}
+.cf-hist-bar.sem-amarillo{background:var(--sem-warn,var(--cf-warn))}
+.cf-hist-bar.sem-naranja {background:var(--sem-high,var(--cf-high))}
+.cf-hist-bar.sem-rojo    {background:var(--sem-bad,var(--cf-bad))}
+@keyframes cf-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.cf-hist-k{font-family:var(--cf-mono);font-size:9px;text-align:center;color:var(--cf-faint);letter-spacing:.2px}
+.cf-hist-foot{font-family:var(--cf-mono);font-size:9.5px;color:var(--cf-faint);text-align:center;
+  margin-top:10px;padding-top:8px;border-top:1px dashed var(--hair,rgba(58,60,63,.10))}
+
+/* ========================= CALENDARIO / HEATMAP ========================== */
+.cf-panel-cal .cf-panel-t{margin-bottom:9px}
+.cf-tools{display:flex;gap:9px;align-items:center;margin-left:auto;text-transform:none;letter-spacing:0}
+.cf-buscar{font:500 11px var(--cf-mono);padding:6px 10px;border-radius:6px;border:1px solid var(--cf-line);
+  background:var(--cf-in);color:var(--cf-txt);width:170px;max-width:42vw}
+.cf-buscar::placeholder{color:var(--cf-faint)}
+.cf-check{display:inline-flex;align-items:center;gap:5px;font:500 10px var(--cf-mono);color:var(--cf-muted);
+  cursor:pointer;white-space:nowrap}
+.cf-check input{accent-color:var(--cf-lime-d);cursor:pointer}
+
+.cf-gapnote{display:flex;gap:8px;align-items:flex-start;font-family:var(--cf-mono);font-size:10px;line-height:1.6;
+  color:var(--cf-muted);background:color-mix(in srgb,var(--cf-warn) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--cf-warn) 32%,transparent);border-radius:7px;padding:8px 11px;margin-bottom:10px}
+.cf-gapnote .cf-ic{--ic-accent:var(--cf-warn);margin-top:1px}
+.cf-gapnote b{color:var(--cf-warn)}
+
+.cf-cal{overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+.cf-cal-head,.cf-cal-row{display:grid;
+  grid-template-columns:var(--cf-namew) max-content 74px;
+  align-items:center;gap:0;min-width:min-content}
+.cf-cal-head{position:sticky;top:0;z-index:2;background:var(--cf-panel);
+  border-bottom:1px solid var(--line-strong,#C3C5B8);padding-bottom:5px;margin-bottom:4px}
+.cf-cal-head .cf-cal-name{font-family:var(--cf-mono);font-size:9px;font-weight:700;letter-spacing:.9px;
+  text-transform:uppercase;color:var(--cf-faint)}
+.cf-cal-head .cf-cal-tail{font-family:var(--cf-mono);font-size:8.5px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--cf-faint);text-align:center}
+
+.cf-cal-grid{display:grid;grid-template-columns:repeat(var(--cols),var(--cf-cell));gap:2px;
+  grid-template-rows:auto;padding:0 10px}
+
+.cf-hcell{display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1;padding-bottom:2px;
+  border-radius:3px}
+.cf-hcell .d{font:700 7.5px var(--cf-mono);color:var(--cf-faint);letter-spacing:0}
+.cf-hcell .n{font:500 8.5px var(--cf-mono);color:var(--cf-muted);font-variant-numeric:tabular-nums}
+.cf-hcell.wknd .d,.cf-hcell.wknd .n{color:var(--cf-lime-d)}
+.cf-hcell.gap{background:color-mix(in srgb,var(--cf-warn) 16%,transparent)}
+.cf-hcell.mes{box-shadow:inset 1px 0 0 var(--line-strong,#C3C5B8)}
+
+.cf-cal-body{display:flex;flex-direction:column}
+.cf-cal-row{padding:2px 0;border-radius:5px;transition:background .14s var(--ease-out,ease)}
+.cf-cal-row:hover{background:var(--cf-in)}
+.cf-cal-row .cf-cal-grid{grid-template-rows:var(--cf-cell) 5px;row-gap:2px}
+.cf-cal-name{display:flex;flex-direction:column;gap:1px;min-width:0;padding-right:8px}
+.cf-cal-name .nom{font-family:var(--cf-cond);font-weight:700;font-size:12.5px;letter-spacing:.2px;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cf-cal-name .udn{font-family:var(--cf-mono);font-size:8.5px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--cf-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* celdas del heatmap — el color del día TRABAJADO es el SEMÁFORO por horas de ESE
+ * día (criterio del cliente 2026-07-24), NO una rampa de lima:
+ *   · 3–6 h  → verde   (--cf-ok)    jornada normal
+ *   · 6–9 h  → amarillo (--cf-warn) jornada larga
+ *   · 9–12 h → naranja (--cf-high)  jornada muy larga
+ *   · ≥12 h  → rojo    (--cf-bad)   jornada excesiva
+ *   · <3 h   → NO cuenta como jornada → celda neutra/gris (como descanso).
+ *   · DESCANSO: casilla neutra, hueca pero perceptible (día de reinicio de la racha).
+ *   · HUECO de telemetría: diagonal ámbar — visiblemente distinto del descanso.
+ * La cinta inferior de rachas conserva su propio semáforo (días consecutivos). */
+.cf-cell{width:100%;height:var(--cf-cell);border-radius:3px;background:var(--hair,rgba(58,60,63,.10))}
+/* vivas: 50-70% de mezcla leía como pastel; el calendario es el semáforo del módulo */
+.cf-cell.est-trabajado.hb-ok  {background:color-mix(in srgb,var(--cf-ok)   72%, var(--cf-panel))}
+.cf-cell.est-trabajado.hb-warn{background:color-mix(in srgb,var(--cf-warn) 82%, var(--cf-panel))}
+.cf-cell.est-trabajado.hb-high{background:color-mix(in srgb,var(--cf-high) 86%, var(--cf-panel))}
+.cf-cell.est-trabajado.hb-bad {background:var(--cf-bad)}
+/* <3 h = no jornada: neutro/gris como descanso (NO verde, NO lime) — reinicia la racha */
+.cf-cell.est-minima{background:color-mix(in srgb,var(--cf-muted) 11%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cf-muted) 26%,transparent)}
+/* descanso = día de reinicio: relleno neutro tenue + borde, se lee como "vacío a propósito" */
+.cf-cell.est-descanso{background:color-mix(in srgb,var(--cf-muted) 8%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cf-muted) 22%,transparent)}
+.cf-cell.est-descanso.wknd{background:color-mix(in srgb,var(--cf-muted) 14%,transparent)}
+.cf-cell.est-sin_datos{background:repeating-linear-gradient(-45deg,
+  color-mix(in srgb,var(--cf-warn) 52%,transparent) 0 2px, transparent 2px 5px);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cf-warn) 48%,transparent)}
+.cf-cell.est-previo{background:transparent;box-shadow:inset 0 0 0 1px var(--hair,rgba(58,60,63,.08))}
+
+/* cinta de rachas (fila 2 del grid) */
+.cf-ribbon{grid-row:2;grid-column:1 / -1;display:grid;
+  grid-template-columns:repeat(var(--cols),var(--cf-cell));gap:2px;height:5px}
+.cf-run{height:6px;border-radius:3px;background:currentColor;position:relative;
+  display:flex;align-items:center;justify-content:center}
+/* SÓLIDA — al 50% de opacidad el semáforo de rachas era invisible en modo claro
+   (crítica del cliente). La vigente además brilla: es LA señal del módulo. */
+.cf-run.vigente{box-shadow:0 0 0 1.5px color-mix(in srgb,currentColor 60%,transparent),
+  0 0 8px color-mix(in srgb,currentColor 50%,transparent)}
+.cf-run.incierta{background:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 7px)}
+
+.cf-cal-tail{display:flex;align-items:center;justify-content:flex-end;gap:5px;padding-left:10px}
+.cf-cal-head .cf-cal-tail{justify-content:flex-end;text-align:right;line-height:1.3;white-space:nowrap}
+
+.cf-badge{display:inline-block;min-width:26px;text-align:center;font-family:var(--cf-mono);
+  font-weight:700;font-size:11.5px;padding:2px 6px;border-radius:5px;border:1px solid transparent;
+  font-variant-numeric:tabular-nums;line-height:1.35}
+/* La racha máxima es secundaria, pero sigue siendo un número que hay que leer:
+   con opacity .62 los cuatro colores del semáforo caían a 2.9–4.0:1. Se
+   jerarquiza con peso y tamaño, no bajando el contraste. */
+.cf-badge.ghost{background:transparent;opacity:.92;font-weight:500;font-size:10.5px}
+.cf-badge.dudosa{border-style:dashed}
+
+/* --- calendario agrupado por UDN: reutiliza EXACTAMENTE el acordeón del detalle
+   (.cf-acc / .cf-acc-head / .cf-acc-body …). La cabecera de fechas (.cf-cal-head)
+   se mantiene compartida y sticky arriba; cada grupo es un acordeón colapsable con
+   sus filas de heatmap dentro. Se fuerza min-content para no comprimir las celdas
+   y mantener la alineación con la cabecera al hacer scroll horizontal. --- */
+.cf-cal .cf-acc{min-width:min-content}
+.cf-cal .cf-acc:first-of-type{margin-top:4px}
+.cf-cal .cf-acc .cf-cal-body{padding:2px 0}
+
+/* ================= DETALLE POR OPERADOR — ACORDEÓN POR UDN ===============
+   La queja del cliente («lista sin fin» de 1500+ filas) se resuelve agrupando
+   el detalle en acordeones colapsables por UDN. Todos arrancan colapsados. */
+.cf-panel-det .cf-panel-t{margin-bottom:9px}
+.cf-det-toggle{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--cf-line);background:var(--cf-in);color:var(--cf-muted);
+  font:700 9.5px var(--cf-mono);letter-spacing:.6px;text-transform:uppercase;
+  padding:6px 11px;border-radius:6px;cursor:pointer;text-transform:uppercase;
+  transition:border-color .16s var(--ease-out,ease),color .16s var(--ease-out,ease)}
+.cf-det-toggle:hover{border-color:var(--cf-lime-d);color:var(--cf-txt)}
+.cf-det-toggle-ic{display:inline-flex;--ic-accent:var(--cf-lime-d)}
+.cf-det-toggle-ic .cf-ic{width:16px;height:16px}
+.cf-det-toggle-ic .cf-ic svg{width:15px;height:15px}
+
+.cf-det{min-width:940px}
+.cf-acc{border:1px solid var(--cf-line);border-radius:8px;background:var(--cf-panel);
+  margin-top:8px;overflow:hidden;transition:border-color .16s var(--ease-out,ease)}
+.cf-acc:first-of-type{margin-top:0}
+.cf-acc:hover{border-color:color-mix(in srgb,var(--cf-lime-d) 32%,var(--cf-line))}
+.cf-acc.is-open{border-color:color-mix(in srgb,var(--cf-lime-d) 42%,var(--cf-line))}
+
+/* cabecera del grupo (botón colapsable) — SIN franja lateral de color */
+.cf-acc-head{width:100%;display:flex;align-items:center;gap:10px;padding:11px 13px;
+  background:transparent;border:0;cursor:pointer;text-align:left;font:inherit;color:var(--cf-txt);
+  transition:background .14s var(--ease-out,ease)}
+.cf-acc-head:hover{background:var(--cf-in)}
+.cf-acc.is-open .cf-acc-head{background:color-mix(in srgb,var(--cf-lime) 6%,transparent)}
+.cf-acc-chev{display:inline-flex;flex:0 0 auto;--ic-accent:var(--cf-muted);
+  transition:transform .28s var(--ease-io,ease)}
+.cf-acc-chev .cf-ic{width:16px;height:16px}
+.cf-acc-chev .cf-ic svg{width:15px;height:15px}
+.cf-acc.is-open .cf-acc-chev{transform:rotate(90deg);--ic-accent:var(--cf-lime-d)}
+.cf-acc-ico{display:inline-flex;flex:0 0 auto;--ic-accent:var(--cf-lime-d)}
+/* nombre de la UDN en LIMA de marca (token del portal), peso fuerte, para
+   diferenciarlo del contenido. Compartido por ambas tablas → consistencia. */
+.cf-acc-name{font-family:var(--cf-cond);font-weight:900;font-size:15px;letter-spacing:.4px;
+  text-transform:uppercase;white-space:nowrap;line-height:1;color:var(--lime-text)}
+.cf-acc.is-open .cf-acc-name{color:var(--lime-text)}
+:root[data-theme="dark"] .cf-acc-name{color:var(--cf-lime)}
+.cf-acc-count{font-family:var(--cf-mono);font-size:9.5px;font-weight:700;letter-spacing:.4px;
+  color:var(--cf-muted);background:var(--cf-in);border:1px solid var(--cf-line);
+  border-radius:20px;padding:2px 9px;white-space:nowrap}
+.cf-acc-sum{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;margin-left:auto;
+  justify-content:flex-end}
+.cf-acc-chip{font-family:var(--cf-mono);font-size:9.5px;font-weight:700;letter-spacing:.3px;
+  padding:2px 8px;border-radius:5px;border:1px solid transparent;white-space:nowrap}
+.cf-acc-max{font-family:var(--cf-mono);font-size:9.5px;color:var(--cf-faint);letter-spacing:.3px;white-space:nowrap}
+.cf-acc-max b{color:var(--cf-txt);font-variant-numeric:tabular-nums}
+
+/* cuerpo colapsable — animación de ALTURA REAL vía grid-template-rows (0fr↔1fr),
+   sin medir en JS y sin saltos. Se desactiva con prefers-reduced-motion. */
+.cf-acc-body{display:grid;grid-template-rows:0fr;
+  transition:grid-template-rows .32s var(--ease-io,cubic-bezier(.4,0,.2,1))}
+.cf-acc.is-open .cf-acc-body{grid-template-rows:1fr}
+.cf-acc-inner{overflow:hidden;min-height:0}
+.cf-acc-inner .cf-tabla{border-top:1px solid var(--cf-line)}
+.cf-acc-inner .cf-tabla td{padding-top:5px;padding-bottom:5px}
+
+.cf-nom-multi{display:inline-block;margin-left:5px;font-family:var(--cf-mono);font-size:8.5px;
+  font-weight:700;color:var(--cf-faint);background:var(--cf-in);border:1px solid var(--cf-line);
+  border-radius:4px;padding:0 4px;vertical-align:1px}
+
+/* ================================ TABLA ================================== */
+.cf-tabla-wrap{overflow-x:auto}
+/* En el detalle, cabecera y grupos comparten colgroup fijo → columnas alineadas. */
+.cf-tabla-head,.cf-det .cf-tabla{table-layout:fixed}
+.cf-tabla-head{margin-bottom:0}
+.cf-tabla-head thead th{position:sticky;top:0;z-index:2}
+.cf-tabla{width:100%;border-collapse:collapse;font-size:12.5px;min-width:940px}
+.cf-tabla th{font-family:var(--cf-mono);font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.7px;color:var(--cf-muted);text-align:left;padding:7px 9px;
+  border-bottom:2px solid var(--line-strong,#C3C5B8);cursor:pointer;user-select:none;white-space:nowrap;
+  position:sticky;top:0;background:var(--cf-panel);z-index:1}
+.cf-tabla th:hover{color:var(--cf-txt)}
+.cf-tabla th.sorted{color:var(--cf-txt);border-bottom-color:var(--cf-lime)}
+.cf-tabla th.num,.cf-tabla td.num{text-align:right}
+.cf-tabla td{padding:5px 9px;border-bottom:1px solid var(--hair,rgba(58,60,63,.10));vertical-align:middle}
+.cf-tabla tbody tr:hover{background:var(--cf-in)}
+.cf-tabla td.udn{font-family:var(--cf-mono);font-size:9.5px;color:var(--cf-muted);
+  text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.cf-tabla td.nom{font-family:var(--cf-cond);font-weight:700;letter-spacing:.2px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.cf-tabla-head th{overflow:hidden;text-overflow:ellipsis}
+.cf-tabla td.num{font-family:var(--cf-mono);font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.cf-tabla td.num.hot{color:var(--cf-bad);font-weight:700}
+.cf-tabla td.num.gap{color:var(--cf-warn);font-weight:700}
+.cf-tabla td.muted{color:var(--cf-faint)}
+.cf-tabla td.fecha{font-family:var(--cf-mono);font-size:10.5px;color:var(--cf-muted);white-space:nowrap}
+.cf-tabla td.fecha i{font-style:normal;color:var(--cf-faint);font-size:9.5px}
+
+/* ================================ VACÍO ================================== */
+.cf-empty{font-family:var(--cf-mono);font-size:11px;color:var(--cf-faint);padding:18px 10px;text-align:center}
+.cf-empty.grande{display:flex;flex-direction:column;align-items:center;gap:10px;padding:56px 24px;font-size:13px;
+  border:1px dashed var(--line-strong,#C3C5B8);border-radius:var(--cf-r)}
+.cf-empty.grande .cf-ic{width:34px;height:34px}
+.cf-empty.grande .cf-ic svg{width:34px;height:34px}
+
+/* ============================= RESPONSIVE ================================ */
+@media (max-width:900px){
+  .cf-mod{--cf-namew:150px;--cf-cell:13px}
+}
+@media (max-width:640px){
+  .cf-head{flex-direction:column;align-items:stretch}
+  .cf-seg{flex-wrap:wrap}
+  .cf-kpis{grid-template-columns:1fr 1fr}
+  .cf-tools{width:100%;margin-left:0;margin-top:6px}
+  .cf-buscar{flex:1;max-width:none}
+  .cf-alertas-list{grid-template-columns:1fr}
+}
+
+/* ====================== TEMA OSCURO — ajustes finos ====================== */
+:root[data-theme="dark"] .cf-kpi{border-color:rgba(255,255,255,.14)}
+:root[data-theme="dark"] .cf-kpi .v{color:var(--tile-txt,#fff)}
+:root[data-theme="dark"] .cf-kpi.warn .v{color:var(--cf-warn)}
+:root[data-theme="dark"] .cf-kpi.bad .v{color:var(--cf-bad)}
+:root[data-theme="dark"] .cf-kpi .l{color:var(--tile-muted,rgba(255,255,255,.78))}
+:root[data-theme="dark"] .cf-kpi .s{color:var(--tile-faint,rgba(255,255,255,.58))}
+:root[data-theme="dark"] .cf-kpi .cf-ic .dash-icon-main{stroke:var(--tile-muted,rgba(255,255,255,.7))}
+:root[data-theme="dark"] .cf-cell.est-trabajado.hb-ok  {background:color-mix(in srgb,var(--cf-ok)   62%, var(--cf-panel))}
+:root[data-theme="dark"] .cf-cell.est-trabajado.hb-warn{background:color-mix(in srgb,var(--cf-warn) 66%, var(--cf-panel))}
+:root[data-theme="dark"] .cf-cell.est-trabajado.hb-high{background:color-mix(in srgb,var(--cf-high) 72%, var(--cf-panel))}
+:root[data-theme="dark"] .cf-cell.est-trabajado.hb-bad {background:color-mix(in srgb,var(--cf-bad)  78%, var(--cf-panel))}
+:root[data-theme="dark"] .cf-cell.est-minima{background:color-mix(in srgb,#fff 7%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,#fff 16%,transparent)}
+:root[data-theme="dark"] .cf-cell.est-descanso{background:color-mix(in srgb,#fff 5%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,#fff 14%,transparent)}
+:root[data-theme="dark"] .cf-cell.est-descanso.wknd{background:color-mix(in srgb,#fff 9%,transparent)}
+:root[data-theme="dark"] .cf-run span{color:var(--on-lime)}
+
+@media (prefers-reduced-motion:reduce){
+  .cf-mod,.cf-hist-bar{animation:none}
+  .cf-alerta:hover,.cf-kpi:hover{transform:none}
+  /* el acordeón salta en vez de animar la altura; el chevron no rota con transición */
+  .cf-acc-body{transition:none}
+  .cf-acc-chev{transition:none}
+}
+
+/* ============ GRÁFICA EXPANDIDA A PRIMER PLANO (UIX.graficas) ============ */
+.cf-lienzo{display:block;min-width:0}
+.gx-abierto .cf-lienzo{display:flex;flex:1 1 auto;min-height:200px}
+.gx-abierto .cf-lienzo>.cf-svg{height:100%}
+.gx-abierto .cf-cal{flex:1 1 auto;min-height:0;overflow:auto}
+.gx-abierto .cf-hist{flex:1 1 auto;min-height:200px}
+
+
+/* ============================================================================
+ * ESTADO EN KPIs — lenguaje DASHTRAX, v2 tras crítica del cliente.
+ * El intento anterior (banda lateral + degradado) violaba la regla congelada
+ * "sin franjas laterales; presencia por tamaño y color" y se veía genérico.
+ * La urgencia se dice como ya la dicen los módulos aprobados:
+ *   · la CIFRA grande en el color del semáforo (ya existe)
+ *   · un CHIP sólido tipo "CRÍTICO" — el mismo del gauge de Seguridad
+ *   · en crítico, el chip respira — el mismo pulso del Cerebro Operativo
+ * ========================================================================== */
+.cf-kpi{position:relative}
+.cf-kpi.ok .v{color:var(--tile-ok,var(--ok))}
+.cf-kpi.warn .v{color:var(--tile-warn,var(--warn))}
+.cf-kpi.high .v{color:var(--tile-high,var(--high))}
+.cf-kpi.bad .v{color:var(--tile-bad,var(--bad))}
+/* la etiqueta reserva el hueco del chip: encimados = ilegible */
+.cf-kpi.warn .cf-kpi-top,.cf-kpi.high .cf-kpi-top,.cf-kpi.bad .cf-kpi-top{padding-right:68px}
+.cf-kpi.warn::after,.cf-kpi.high::after,.cf-kpi.bad::after{
+  position:absolute;top:12px;right:12px;
+  font:800 8.5px var(--mono,monospace);letter-spacing:1.2px;
+  padding:3px 7px;border-radius:4px}
+.cf-kpi.warn::after{content:'VIGILAR';color:var(--sem-warn-on);background:var(--sem-warn-solid)}
+.cf-kpi.high::after{content:'ALTO';color:var(--sem-high-on);background:var(--sem-high-solid)}
+.cf-kpi.bad::after{content:'CRÍTICO';color:var(--sem-bad-on);background:var(--sem-bad-solid);
+  animation:cf-resp 2.6s ease-in-out infinite}
+/* pulso por ANILLO, nunca por opacidad: apagar el chip rompía su contraste */
+@keyframes cf-resp{0%,100%{box-shadow:0 0 0 0 transparent}
+  50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--sem-bad) 32%,transparent)}}
+@media (prefers-reduced-motion:reduce){.cf-kpi.bad::after{animation:none}}
+
+/* auditoría 2026-07-25: chips con texto sobre tinte — mezcla propia, no la global */
+.cf-badge.ghost{background:transparent!important;border-color:currentColor}
+.cf-mod .cf-badge.ghost{background:transparent!important;border:1px solid currentColor!important}
+/* ghost = contorno: al quitarle el fondo sólido, el texto heredaba el color "on"
+   (blanco) de sem-rojo → blanco sobre panel = invisible (ratio 1). El fantasma
+   habla con la TINTA del semáforo, que sí contrasta sobre panel. */
+.cf-mod .cf-badge.ghost.sem-rojo{color:var(--bad)!important}
+.cf-mod .cf-badge.ghost.sem-naranja{color:var(--high)!important}
+.cf-mod .cf-badge.ghost.sem-amarillo{color:var(--warn)!important}
+.cf-mod .cf-badge.ghost.sem-verde{color:var(--ok)!important}
+/* último caso de la auditoría: 4.45 a un pelo del 4.5 — un paso de tinta */
+.cf-tabla td.num.hot{color:color-mix(in srgb,var(--cf-bad) 90%,black)}
+
+/* ============================================================================
+ * FIX 2026-07-26 — calendario recortado (reporte del cliente con captura).
+ * El scroller es .cf-cal (2,340px con 20 semanas), pero cada grupo del acordeón
+ * medía el ancho del viewport (1,120px) y su .cf-acc-inner{overflow:hidden}
+ * AMPUTABA las celdas sobrantes: el encabezado de fechas scrolleaba y las filas
+ * no — "los días en cuadro más cortos que las fechas". La cadena del acordeón
+ * crece al contenido (el overflow:hidden sigue sirviendo para animar ALTURA).
+ * ========================================================================== */
+.cf-cal .cf-acc,
+.cf-cal .cf-acc-body,
+.cf-cal .cf-acc-inner,
+.cf-cal .cf-cal-body{min-width:max-content}
+/* la cabecera del grupo (nombre UDN + badges) se queda a la vista al scrollear */
+.cf-cal .cf-acc-h{position:sticky;left:0;width:max-content;max-width:1080px;z-index:1}
+/* el nombre del operador no se pierde con el scroll: columna anclada */
+.cf-cal-head .cf-cal-name,.cf-cal-row .cf-cal-name{
+  position:sticky;left:0;z-index:1;background:var(--cf-panel)}
+.cf-cal-row:hover .cf-cal-name{background:var(--cf-in)}
+
+/* --- chip de bajas ocultas (nunca ocultar en silencio · patrón M4) --- */
+.cf-bajas{margin-left:8px;border:1px solid var(--sem-bad,#D93F37);background:transparent;
+  color:var(--sem-bad-ink,var(--sem-bad,#D93F37));border-radius:5px;padding:3px 8px;
+  font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;
+  transition:all .16s var(--ease-out,ease-out);vertical-align:middle}
+.cf-bajas:hover{background:var(--sem-bad,#D93F37);color:#fff}
+.cf-bajas.on{background:var(--sem-bad,#D93F37);border-color:var(--sem-bad,#D93F37);color:#fff}
+/* badge .op-est (ui.css) dentro de la columna anclada del calendario */
+.cf-cal-name .op-est{margin-left:5px}

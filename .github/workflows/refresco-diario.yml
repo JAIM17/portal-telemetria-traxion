@@ -1,0 +1,94 @@
+name: Refresco diario · semana en curso
+
+# Reemplazo en la NUBE de com.traxion.refresco-diario (launchd en la Mac de
+# Jorge Interiano). Mismo guion que connector/refresco_diario.sh, paso por paso.
+#
+# POR QUÉ ES OBLIGATORIO Y NO COSMÉTICO: Traffilog borra el chofer de los EVENTOS
+# ~30 días hacia atrás. Si una semana no se baja dentro de esa ventana, la
+# atribución se pierde PARA SIEMPRE. Comprobado el 2026-08-13: re-bajar una
+# semana vieja (W05) devolvió 8.3 % menos eventos.
+#
+# El commit del dato es el que dispara la publicación (ver publicar.yml).
+
+on:
+  schedule:
+    # 15:10 UTC = 09:10 en Ciudad de México (CST, UTC-6). GitHub no respeta
+    # horarios locales: si el país vuelve al horario de verano, ajustar aquí.
+    - cron: "10 15 * * *"
+  workflow_dispatch: {}
+
+# Una sola sesión contra Traffilog a la vez: la API no admite corridas
+# solapadas, y era lo que en la Mac cuidaba el lockfile de /tmp.
+concurrency:
+  group: traffilog-api
+  cancel-in-progress: false
+
+jobs:
+  refresco:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      TRAFFILOG_USER: ${{ secrets.TRAFFILOG_USER }}
+      TRAFFILOG_PASS: ${{ secrets.TRAFFILOG_PASS }}
+      TRAFFILOG_REST_URL: ${{ secrets.TRAFFILOG_REST_URL }}
+      TZ: America/Mexico_City
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Semana en curso
+        id: sem
+        run: echo "sem=$(date +%G-W%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Descargar la semana
+        run: node connector/archivo_historico.mjs --semana "${{ steps.sem.outputs.sem }}" --force
+
+      - name: Enriquecer con ralentí real
+        run: node connector/enriquecer_extendido.mjs --semana "${{ steps.sem.outputs.sem }}" --force --pausa 2
+        continue-on-error: true
+
+      - name: Re-atribuir eventos
+        run: node connector/reatribuir_eventos.mjs --semana "${{ steps.sem.outputs.sem }}" --force
+
+      # SELLO DE LA SEMANA ANTERIOR (hueco detectado 2026-07-27): el corte del
+      # domingo llega hasta el sábado y el lunes ya es semana nueva; sin esto el
+      # DOMINGO nunca recibía su bajada final. Lunes y martes se re-baja completa,
+      # todavía dentro de la ventana de 30 días.
+      - name: Sellar la semana anterior (lunes y martes)
+        if: ${{ true }}
+        run: |
+          DOW=$(date +%u)
+          if [ "$DOW" -le 2 ]; then
+            PREV=$(date -d "7 days ago" +%G-W%V)
+            echo "sellando $PREV"
+            node connector/archivo_historico.mjs --semana "$PREV" --force || echo "aviso: sello falló"
+            node connector/enriquecer_extendido.mjs --semana "$PREV" --force --pausa 2 || true
+            node connector/reatribuir_eventos.mjs --semana "$PREV" --force
+          else
+            echo "no toca sello (día $DOW)"
+          fi
+
+      - name: Censo de actividad
+        run: node connector/censo_actividad.mjs
+
+      # Magnitud de las caídas de combustible (Δ%): 1 llamada/30 s, recientes
+      # primero. Va al final, cuando ya no hay otro proceso usando la API.
+      - name: Delta de combustible (30 mediciones)
+        run: node connector/enriquecer_combustible.mjs --max 30
+        continue-on-error: true
+
+      # Agregados precalculados (fase 2 de escalabilidad): 6 KB por semana contra
+      # ~880 KB del archivo semanal. Se regeneran siempre al final, para que
+      # nunca queden desfasados del dato que acaba de entrar.
+      - name: Regenerar rollups
+        run: node connector/generar_rollups.mjs
+
+      - name: Commit del dato
+        run: |
+          git config user.name "telemetria-bot"
+          git config user.email "bot@corporacionlipu.local"
+          git add datos/
+          git commit -m "data: refresco diario ${{ steps.sem.outputs.sem }} (día vencido)" || echo "sin cambios"
+          git push

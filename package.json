@@ -1,0 +1,19 @@
+{
+  "name": "portal-telemetria-traxion",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Portal de Telemetría TRAXION / LIPU — telemetría de flota Traffilog convertida en score de seguridad, cargas de trabajo, hábitos de conducción y diagnóstico por UDN y cliente. Cuenta regional: UDN Guadalajara, Colima y Lázaro Cárdenas.",
+  "scripts": {
+    "serve": "node connector/servidor_local.mjs",
+    "refresco": "sh connector/refresco_diario.sh",
+    "rollups": "node connector/generar_rollups.mjs",
+    "censo": "node connector/censo_actividad.mjs",
+    "publicar": "sh connector/publicar_manual.sh",
+    "seed:admin": "node connector/seed_admin.mjs",
+    "validar:scores": "node connector/validar_scores_diarios.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

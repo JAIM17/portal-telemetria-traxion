@@ -1,0 +1,24 @@
+# --- SECRETOS — nunca versionar -------------------------------------------
+# `.gitignore` protege el repositorio, NO protege un `cp -r` ni un ZIP:
+# verificar a mano antes de compartir el proyecto por cualquier otra vía.
+connector/.env
+connector/.token_cache.json
+connector/login-frame.txt
+.env
+*.pem
+*.key
+
+# --- dependencias y artefactos ---------------------------------------------
+node_modules/
+.netlify/
+dist/
+
+# --- salidas locales --------------------------------------------------------
+*.log
+datos/export/
+datos/_respaldo_historico_*/
+connector/.backfill-progress.json
+
+# --- sistema ----------------------------------------------------------------
+.DS_Store
+Thumbs.db

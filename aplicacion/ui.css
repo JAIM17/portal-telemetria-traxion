@@ -1,0 +1,294 @@
+/* ============================================================================
+ * UIX — estilos compartidos: acordeón jerárquico, rejilla base de cards,
+ * y las transiciones con propósito del portal. Depende de los tokens de
+ * index.html (--panel, --line, --edge, --mono, --cond, --ease-out…).
+ * ========================================================================== */
+
+/* ============ 0. ICONO BASE (aplicacion/iconos.js) =======================
+ * Especificidad cero (:where) a propósito: cualquier prefijo de módulo
+ * (.pn-ic, .cf-ic, .cb-ic…) sigue mandando sobre estos valores por defecto. */
+:where(.ic){display:inline-grid;place-items:center;width:20px;height:20px;flex:0 0 20px;
+  --ic-accent:var(--lime-ink)}
+:where(.ic) svg{width:18px;height:18px;overflow:visible}
+:where(.ic) .dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+:where(.ic) .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* dentro de una card KPI el trazo estructural usa la escala del tile gris */
+:where(.tile,.pn-kpi,.cf-kpi,.m3op-kpi,.cb-tile) .dash-icon-main{stroke:var(--tile-muted,var(--muted))}
+
+/* ======================= 1. ACORDEÓN (bloques) ============================ */
+.acc-root{display:flex;flex-direction:column;gap:8px}
+.acc-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.acc-all{border:1px solid var(--edge);background:var(--panel);color:var(--muted);
+  border-radius:5px;padding:5px 10px;font:600 9.5px/1 var(--mono);letter-spacing:.6px;
+  text-transform:uppercase;cursor:pointer;
+  transition:color .16s var(--ease-out),border-color .16s var(--ease-out),background .16s var(--ease-out),transform .12s var(--ease-out)}
+.acc-all:hover{color:var(--txt);border-color:var(--lime-dark);background:var(--panel-in)}
+.acc-all:active{transform:scale(.96)}
+.acc-nota{font:500 9.5px/1.5 var(--mono);color:var(--muted);letter-spacing:.3px;margin-left:auto}
+
+.acc{display:flex;flex-direction:column;gap:7px}
+.acc-g{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel);
+  overflow:hidden;transition:border-color .2s var(--ease-out)}
+.acc-g:hover{border-color:var(--line-strong)}
+.acc-g[data-abierto]{border-color:var(--line-strong)}
+.acc-n1 .acc-g{background:var(--panel2)}
+
+.acc-h{margin:0}
+.acc-t{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  border:0;background:transparent;color:var(--txt);cursor:pointer;
+  padding:9px 12px;min-height:42px;font-family:var(--mono);
+  transition:background .16s var(--ease-out)}
+.acc-t:hover{background:var(--lime-soft)}
+.acc-cv{display:inline-grid;place-items:center;width:16px;height:16px;flex:0 0 16px;
+  --ic-accent:var(--muted);
+  transition:transform .22s var(--ease-out),--ic-accent .16s linear}
+.acc-cv svg{width:14px;height:14px}
+[data-abierto]>.acc-h>.acc-t .acc-cv,
+tr[data-abierto] .acc-t .acc-cv{transform:rotate(90deg);--ic-accent:var(--lime-ink)}
+.acc-t:hover .acc-cv{--ic-accent:var(--lime-ink)}
+.acc-lv{font-size:8.5px;font-weight:700;letter-spacing:.95px;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--edge);border-radius:3px;padding:2px 5px;flex:0 0 auto;line-height:1}
+.acc-k{font-family:var(--cond);font-weight:900;font-size:14px;letter-spacing:.3px;
+  text-transform:uppercase;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.acc-meta{margin-left:auto;font-size:10px;font-weight:500;letter-spacing:.3px;color:var(--muted);
+  font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.acc-meta b{color:var(--txt);font-weight:700}
+.acc-meta i{font-style:normal;color:var(--faint)}
+
+/* altura real, sin saltos: 0fr → 1fr sobre una rejilla de una sola fila */
+.acc-b{display:grid;grid-template-rows:0fr;
+  transition:grid-template-rows .3s var(--ease-out),opacity .22s var(--ease-out)}
+.acc-in{overflow:hidden;min-height:0;opacity:0;transition:opacity .2s var(--ease-out)}
+.acc-g[data-abierto]>.acc-b{grid-template-rows:1fr}
+.acc-g[data-abierto]>.acc-b>.acc-in{opacity:1;transition-delay:.06s}
+.acc-in>*{padding:2px 10px 11px}
+.acc-n1{padding:0 0 0 14px}
+
+/* ======================= 1b. ACORDEÓN EN TABLA ============================ */
+table.acc-tabla{border-collapse:collapse}
+tr.acc-tr>th{padding:0;background:var(--panel2);
+  border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line);
+  position:static}
+tr.acc-tr-n0>th{background:var(--panel2)}
+tr.acc-tr-n1>th{background:var(--panel)}
+tr.acc-tr .acc-t{padding:8px 12px;min-height:38px}
+tr.acc-tr-n1 .acc-t{padding-left:30px}
+tr.acc-tr-n1 .acc-k{font-size:12.5px;color:var(--muted)}
+tr.acc-tr[data-abierto]>th{border-bottom-color:var(--lime-dark)}
+
+@keyframes acc-fila{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.acc-entra{animation:acc-fila .3s var(--ease-out) both;
+  animation-delay:calc(var(--acc-i,0) * 22ms)}
+
+/* ============ 1c. ESTADO DENTRO DE UNA CARD KPI ==========================
+ * El fondo de las cards KPI es --tile-bg: blanco en claro, gris TRAXION
+ * #63666A en oscuro. Sobre ese gris de luminancia media, --ok/--warn/--high/
+ * --bad NO llegan a 3:1 (2.34 / 2.79 / 2.40 / 1.87). Aquí se remapean a la
+ * escala --tile-* calibrada contra esa superficie; todo el subárbol de la
+ * card la hereda y ningún módulo necesita saberlo. En claro son idénticas. */
+.tile,.pn-kpi,.cf-kpi,.m3op-kpi,.m4-ukpi,.m4-kpi,.m1-kpi,.cb-tile{
+  --ok:var(--tile-ok);     --warn:var(--tile-warn);
+  --high:var(--tile-high); --bad:var(--tile-bad);
+  --pn-ok:var(--tile-ok);  --pn-warn:var(--tile-warn);
+  --pn-high:var(--tile-high); --pn-bad:var(--tile-bad);
+  --cf-ok:var(--tile-ok);  --cf-warn:var(--tile-warn);
+  --cf-high:var(--tile-high); --cf-bad:var(--tile-bad);
+}
+
+/* ============ 2. REJILLA BASE DE CARDS — misma altura por fila ============ */
+/* Toda rejilla de KPIs del portal comparte gutter, mínimo y estiramiento,
+   para que las cards de cualquier módulo caigan en la misma retícula. */
+.tiles,.pn-kpis,.cf-kpis,.m3op-kpis,.m4-ukpis,.cb-tiles,.m1-kpis{
+  align-items:stretch}
+.tile,.pn-kpi,.cf-kpi,.m3op-kpi,.m4-kpi,.cb-tile,.m1-kpi{height:100%}
+/* números: siempre tabulares y alineados por línea base */
+.tile .v,.pn-kpi-v,.cf-kpi-v,.m3op-kpi-v,.m4-kpi-v,.m1-kpi b,.acc-meta,
+table.mini td.num,table.mini th.num,.pn-tabla .n,.m4-tabla .num{
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1,"lnum" 1}
+
+/* ================== 3. ENTRADA ESCALONADA DE CARDS =======================
+ * Se aplica al cambiar de pestaña Y al cambiar un filtro (ui.js vuelve a
+ * sembrar la clase). Nada entra desde scale(0): 8px de recorrido y opacidad,
+ * que es como aparece algo que ya estaba ahí. Escalón de 38ms — por debajo
+ * de ~30ms no se percibe la cascada, por encima de ~80ms la interfaz se
+ * siente lenta. Nunca bloquea la interacción: los delays son decorativos. */
+@keyframes uix-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.stagger>*{opacity:0;animation:uix-rise .4s var(--ease-out) forwards;
+  animation-delay:calc(min(var(--i,0),8) * 38ms)}
+.stagger>*:nth-child(1){--i:0}
+.stagger>*:nth-child(2){--i:1}
+.stagger>*:nth-child(3){--i:2}
+.stagger>*:nth-child(4){--i:3}
+.stagger>*:nth-child(5){--i:4}
+.stagger>*:nth-child(6){--i:5}
+.stagger>*:nth-child(7){--i:6}
+.stagger>*:nth-child(8){--i:7}
+.stagger>*:nth-child(n+9){--i:8}
+
+/* Bloques de un módulo (paneles, rejillas, tablas): misma cascada, un paso
+   más lenta porque son piezas grandes y son menos. La siembra ui.js al
+   renderizar un módulo, así que cubre cambio de pestaña y cambio de filtro. */
+.uix-entra>*{opacity:0;animation:uix-rise .44s var(--ease-out) forwards;
+  animation-delay:calc(min(var(--i,0),6) * 46ms)}
+.uix-entra>*:nth-child(1){--i:0}
+.uix-entra>*:nth-child(2){--i:1}
+.uix-entra>*:nth-child(3){--i:2}
+.uix-entra>*:nth-child(4){--i:3}
+.uix-entra>*:nth-child(5){--i:4}
+.uix-entra>*:nth-child(6){--i:5}
+.uix-entra>*:nth-child(n+7){--i:6}
+
+/* Cifra que cambia de valor: fundido corto con desenfoque de 1.5px. El blur
+   tapa el instante en que conviven dos números distintos, que es lo que hace
+   que un contador "parpadee" feo. Sólo transform/opacity/filter. */
+@keyframes uix-cifra{
+  from{opacity:.25;filter:blur(1.5px);transform:translateY(-2px)}
+  to{opacity:1;filter:blur(0);transform:none}
+}
+.uix-cambia{animation:uix-cifra .28s var(--ease-out) both}
+
+/* ==================== 3b. TRANSICIONES CON PROPÓSITO =====================
+ * Reglas del sistema, no adorno:
+ *  · Sólo se anima transform / opacity / filter — nunca layout.
+ *  · Curvas de salida (arrancan rápido): la interfaz responde al instante.
+ *  · Duración por frecuencia de uso: cuanto más se repite, más corta.
+ *  · Los estados :hover se encierran tras (hover:hover) para que un toque en
+ *    móvil no deje la card "pegada" en hover.
+ */
+
+/* Cambio de pestaña: el contenedor de módulos entra una sola vez, sin desplazar
+   nada (sólo opacidad + 6px), para que la barra de pestañas no parezca saltar. */
+@keyframes uix-tab{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.mod-slot[style*="block"]{animation:uix-tab .26s var(--ease-out) both}
+
+/* Gauges y marcas de dato: realce al pasar por encima, sin mover el layout.
+   El gauge es el foco de la card, así que sube un punto de luminosidad y
+   engrosa levemente el arco de valor — nada de escalar el SVG entero. */
+@media (hover:hover) and (pointer:fine){
+  .m1-gauge-card:hover .g-val,
+  .m3op-kpi-gauge:hover .m3op-g-val,
+  .m4-card:hover .m4-g-val{filter:brightness(1.12) saturate(1.06)}
+  .m1-gauge-card .g-val,
+  .m3op-kpi-gauge .m3op-g-val,
+  .m4-card .m4-g-val{transition:stroke-dasharray .7s var(--ease-out),
+                                stroke-dashoffset .45s var(--ease-out),
+                                filter .18s var(--ease-out)}
+  .m1-gauge-card:hover .g-aguja{filter:drop-shadow(0 0 4px var(--lime-soft))}
+  /* fila de tabla y elemento de lista: realce inmediato, 140ms */
+  .acc-t:hover .acc-k{color:var(--txt)}
+}
+
+/* Pulsación: toda superficie pulsable confirma el toque. 0.97 es perceptible
+   sin ser un rebote. Duración corta porque se repite cientos de veces. */
+.acc-t:active{transform:scale(.995)}
+.acc-all:active,.chip:active,.mini-btn:active{transform:scale(.96)}
+
+/* ============ 3c. GRÁFICA EXPANDIDA A PRIMER PLANO (UIX.graficas) =========
+ * El contenedor de la gráfica se MUEVE al diálogo (no se clona) y el módulo
+ * regenera su SVG al tamaño real del lienzo. Nada de escalar con CSS.
+ * OJO: aquí no se estiliza el selector `header` a secas — sólo `.gx-host>header`,
+ * es decir el encabezado de la propia card de gráfica. */
+.gx-host{position:relative}
+.gx-host>header,.gx-host>.pn-card-h,.gx-host>.cb-card-h,.gx-host>h3,
+.gx-host>.cf-panel-t,.gx-host>.m4-orden-nota,.gx-host>.acc-root>.acc>.acc-g>.acc-h>.acc-t{padding-right:44px}
+.gx-btn{position:absolute;top:8px;right:8px;z-index:3;
+  display:inline-grid;place-items:center;width:30px;height:30px;padding:0;
+  border:1px solid var(--line);border-radius:7px;background:var(--panel);
+  color:var(--muted);cursor:pointer;opacity:.62;
+  --ic-accent:var(--lime-ink);
+  transition:opacity .16s var(--ease-out),border-color .16s var(--ease-out),
+             background .16s var(--ease-out),transform .12s var(--ease-out)}
+.gx-btn svg{width:17px;height:17px;overflow:visible}
+.gx-btn .dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gx-btn .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gx-host:hover .gx-btn,.gx-btn:focus-visible{opacity:1}
+.gx-btn:hover{border-color:var(--lime-dark);background:var(--panel-in)}
+.gx-btn:active{transform:scale(.94)}
+.gx-btn:focus-visible{outline:2px solid var(--lime-dark);outline-offset:2px}
+
+/* hueco que queda en el flujo mientras la card está en primer plano */
+.gx-hueco{border:1px dashed var(--line-strong);border-radius:var(--radius);
+  background:repeating-linear-gradient(135deg,transparent 0 8px,var(--hair) 8px 9px)}
+
+body.gx-lock{overflow:hidden}
+.gx-scrim{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;
+  padding:min(3vh,26px) min(3vw,26px);
+  background:color-mix(in srgb,var(--bg) 76%,transparent);
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+  animation:gx-fade .18s var(--ease-out) both}
+.gx-scrim[hidden]{display:none}
+@keyframes gx-fade{from{opacity:0}to{opacity:1}}
+.gx-win{display:flex;flex-direction:column;width:min(1720px,97vw);height:min(1080px,94vh);
+  background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);overflow:hidden;
+  animation:gx-in .24s var(--ease-out) both}
+@keyframes gx-in{from{opacity:0;transform:scale(.985) translateY(8px)}to{opacity:1;transform:none}}
+.gx-win-h{display:flex;align-items:center;gap:12px;flex:0 0 auto;
+  padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.gx-win-t{margin:0;min-width:0;flex:1 1 auto;font:900 16px/1.25 var(--cond);letter-spacing:.4px;
+  text-transform:uppercase;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gx-close{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;
+  border:1px solid var(--edge);border-radius:6px;background:var(--panel);color:var(--txt);
+  padding:6px 11px 6px 8px;cursor:pointer;font:700 10px/1 var(--mono);letter-spacing:.9px;
+  text-transform:uppercase;--ic-accent:var(--lime-ink);
+  transition:border-color .16s var(--ease-out),background .16s var(--ease-out)}
+.gx-close svg{width:16px;height:16px;overflow:visible}
+.gx-close .dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gx-close .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gx-close:hover{border-color:var(--lime-dark);background:var(--panel-in)}
+.gx-close:focus-visible{outline:2px solid var(--lime-dark);outline-offset:2px}
+.gx-win-b{flex:1 1 auto;min-height:0;overflow:auto;padding:13px;display:flex}
+
+/* Móvil: el diálogo ocupa el viewport DINÁMICO (dvh — la barra del navegador
+   comía el encabezado y el botón CERRAR quedaba fuera de pantalla). */
+@media (max-width:760px){
+  .gx-scrim{padding:0}
+  .gx-win{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0}
+  .gx-win-h{position:sticky;top:0;z-index:2;padding-top:max(11px,env(safe-area-inset-top))}
+  .gx-close{padding:9px 13px 9px 10px;font-size:11px}   /* dedo, no cursor */
+}
+
+/* la card expandida ocupa todo el diálogo y su lienzo se lleva el alto sobrante */
+.gx-ctx{display:contents!important}   /* réplica del contexto del módulo: sin caja */
+.gx-win-b .gx-abierto{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
+  margin:0;height:100%;max-height:none;box-shadow:none;overflow:auto}
+.gx-abierto [data-graf-lienzo]{flex:1 1 auto;min-height:220px}
+.gx-abierto [data-graf-lienzo]>svg{width:100%;height:100%;max-height:none}
+.gx-abierto>.gx-btn{display:none}          /* el cierre vive en la cabecera del diálogo */
+
+@media (max-width:640px){
+  .gx-scrim{padding:0}
+  .gx-win{width:100vw;height:100vh;border-radius:0;border:0}
+}
+
+/* ========================= 4. MOVIMIENTO REDUCIDO ======================== */
+/* Se elimina todo desplazamiento, escalado y rotación; se conservan las
+   transiciones de color y opacidad, que ayudan a leer el cambio de estado.
+   El acordeón sigue funcionando: abre y cierra, pero sin animar la altura. */
+@media (prefers-reduced-motion:reduce){
+  /* la rotación del chevron SÍ se conserva: indica el estado abierto/cerrado,
+     no es decoración. Lo que se quita es la transición, no el estado final. */
+  .acc-b,.acc-in,.acc-cv{transition:none}
+  .acc-entra{animation:none}
+  .stagger>*,.uix-entra>*{opacity:1;animation:none;transform:none}
+  .uix-cambia{animation:none}
+  .mod-slot[style*="block"]{animation:none}
+  .acc-t:active,.acc-all:active,.chip:active,.mini-btn:active{transform:none}
+  .m1-gauge-card .g-val,.m3op-kpi-gauge .m3op-g-val,.m4-card .m4-g-val,
+  .g-val,.g-aguja,.m4-g-val,.m4-bar-fill{transition:none}
+  /* la gráfica expandida aparece de golpe: sigue siendo un cambio de contexto
+     claro (fondo atenuado + foco atrapado), pero sin desplazamiento ni escala */
+  .gx-scrim,.gx-win{animation:none}
+  .gx-btn,.gx-close{transition:none}
+  .gx-btn:active{transform:none}
+}
+
+/* ------------------------------------------------------------------ estado
+ * Badge de ESTADO DE ACTIVIDAD del operador (snapshot.estadoOperador).
+ * Compartido por todos los módulos: inactivo = 2–4 semanas sin actividad,
+ * posible baja = ≥5. Los activos no llevan badge (el silencio es la norma). */
+.op-est{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:4px;
+  font:700 8.5px var(--mono);letter-spacing:.6px;text-transform:uppercase;
+  vertical-align:middle;white-space:nowrap}
+.op-est.inactivo{background:var(--sem-high,#EE8B36);color:#fff}
+.op-est.posible_baja{background:var(--sem-bad,#D93F37);color:#fff}

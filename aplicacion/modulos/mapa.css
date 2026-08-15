@@ -1,0 +1,211 @@
+/* ============================================================================
+ * MÓDULO — MAPA DE CALOR / PUNTOS NEGROS · lenguaje visual DASHTRAX
+ * Tokens globales del portal. Aquí el color SÍ significa estado (más eventos =
+ * peor), así que la escala es el semáforo. El lime queda para marca y selección.
+ * ========================================================================== */
+
+.mp-mod{
+  --mp-mono: var(--mono, 'IBM Plex Mono', ui-monospace, Menlo, monospace);
+  --mp-cond: var(--cond, 'Roboto Condensed', 'Arial Narrow', sans-serif);
+  display:flex; flex-direction:column; gap:var(--gap-bloque,38px);
+  color:var(--txt);
+  animation:mp-in .38s var(--ease-out, cubic-bezier(.22,1,.36,1));
+}
+@keyframes mp-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mp-mod{animation:none}}
+
+.mp-ic{display:inline-grid;place-items:center;width:20px;height:20px;flex:0 0 20px;--ic-accent:var(--lime-dark)}
+.mp-ic svg{width:19px;height:19px;overflow:visible}
+.mp-mod .dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.mp-mod .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+:root[data-theme="dark"] .mp-ic{--ic-accent:var(--lime)}
+
+/* ============================== CABECERA ================================= */
+.mp-head{border-bottom:1px solid var(--line);padding-bottom:11px}
+.mp-title{font-family:var(--mp-cond);font-weight:900;font-size:22px;letter-spacing:.4px;
+  text-transform:uppercase;margin:0;line-height:1.05}
+.mp-title em{color:var(--muted);font-style:normal;font-weight:700}
+.mp-sub{font-family:var(--mp-mono);font-size:10px;letter-spacing:.55px;text-transform:uppercase;
+  color:var(--faint);margin-top:6px}
+
+/* =============================== CAPAS =================================== */
+.mp-capas{display:flex;flex-wrap:wrap;gap:6px}
+.mp-capa{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);
+  font:700 10.5px var(--mp-mono);letter-spacing:.4px;text-transform:uppercase;
+  border-radius:6px;padding:8px 13px;cursor:pointer;white-space:nowrap;
+  transition:background .16s var(--ease-out),color .16s,border-color .16s}
+.mp-capa:hover{background:var(--lime-soft);color:var(--txt);border-color:var(--lime-dark)}
+.mp-capa.on{background:var(--lime);color:var(--on-lime);border-color:var(--lime-dark)}
+.mp-capa:focus-visible{outline:2px solid var(--lime-dark);outline-offset:2px}
+
+/* ================================ KPIs =================================== */
+.mp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:var(--gap-card,30px);align-items:stretch}
+.mp-kpi{background:var(--tile-bg,var(--panel));border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--pad-kpi,20px 22px);box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0;
+  transition:transform .18s var(--ease-out),box-shadow .18s}
+.mp-kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.mp-kpi-top{display:flex;align-items:flex-start;gap:7px;min-height:30px}
+.mp-kpi .l{font-family:var(--mp-mono);font-size:9px;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--tile-muted,var(--muted));line-height:1.35;padding-top:2px}
+.mp-kpi .v{font-family:var(--mp-mono);font-weight:700;font-size:25px;letter-spacing:-1px;
+  font-variant-numeric:tabular-nums;line-height:1;margin-top:8px;color:var(--tile-txt,var(--txt))}
+.mp-kpi .s{font-family:var(--mp-mono);font-size:9.5px;color:var(--tile-faint,var(--faint));margin-top:6px;line-height:1.35}
+.mp-kpi.bad .v{color:var(--tile-bad,var(--bad))}
+.mp-kpi.high .v{color:var(--tile-high,var(--high))}
+.mp-kpi.bad .mp-ic{--ic-accent:var(--sem-bad)}
+.mp-kpi.high .mp-ic{--ic-accent:var(--sem-high)}
+
+/* ================================ AVISO ================================== */
+.mp-aviso{display:flex;gap:11px;align-items:flex-start;
+  font:500 11px/1.65 var(--mp-mono);color:var(--muted);
+  padding:13px 15px;border:1px dashed var(--line-strong);border-radius:var(--radius);background:var(--panel2)}
+.mp-aviso b{color:var(--txt)}
+
+.mp-vacio{font:500 11.5px var(--mp-mono);color:var(--muted);line-height:1.65;
+  padding:28px;text-align:center;border:1px dashed var(--line-strong);border-radius:var(--radius);background:var(--panel2)}
+.mp-vacio small{display:block;margin-top:8px;font-size:10px;color:var(--faint)}
+.mp-vacio code{font-size:10px;background:var(--panel);border:1px solid var(--hair);border-radius:3px;padding:1px 5px}
+.mp-vacio-mini{font:500 10.5px var(--mp-mono);color:var(--faint);padding:26px 0;text-align:center}
+
+/* ============================== BLOQUES ================================== */
+.mp-bloque{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--pad-card,22px 24px);box-shadow:var(--shadow);min-width:0}
+.mp-bloque-t{display:flex;align-items:center;gap:9px;font:700 10px var(--mp-mono);letter-spacing:.9px;
+  text-transform:uppercase;color:var(--muted);padding-bottom:11px;margin-bottom:13px;border-bottom:1px solid var(--line)}
+
+/* ================================ MAPA =================================== */
+.mp-svg{width:100%;height:auto;display:block;border-radius:var(--radius-sm)}
+.mp-bg{fill:var(--panel2)}
+.mp-g{stroke:var(--hair);stroke-width:1}
+/* Escala secuencial del semáforo. El paso 1 va en GRIS: donde casi no pasa nada
+   no tiene por qué haber color — si todo grita, nada grita. */
+.mp-pt{cursor:pointer;transition:opacity .18s var(--ease-out),stroke-width .18s}
+.mp-p1{fill:var(--gray);fill-opacity:.20;stroke:var(--gray);stroke-opacity:.45;stroke-width:1}
+.mp-p2{fill:var(--sem-warn);fill-opacity:.32;stroke:var(--sem-warn);stroke-width:1.2}
+.mp-p3{fill:var(--sem-high);fill-opacity:.42;stroke:var(--sem-high);stroke-width:1.4}
+.mp-p4{fill:var(--sem-bad);fill-opacity:.52;stroke:var(--sem-bad);stroke-width:1.6}
+/* Punto de RUTA: trazo discontinuo. Es una marca de FORMA, no de color — el color
+   ya está ocupado por la intensidad y añadir un quinto tono lo volvería ilegible. */
+.mp-ruta{stroke-dasharray:3 2;stroke-width:2.2}
+.mp-pt:hover{fill-opacity:.72}
+.mp-pt.sel{stroke:var(--txt);stroke-width:2.6;stroke-dasharray:none;fill-opacity:.8}
+
+.mp-leyenda{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:12px;
+  padding-top:11px;border-top:1px solid var(--hair)}
+.mp-k{display:inline-flex;align-items:center;gap:4px;font:500 9.5px var(--mp-mono);color:var(--muted)}
+.mp-k i{width:11px;height:11px;border-radius:50%;display:inline-block;border:1px solid transparent}
+.mp-k i.mp-p1{background:color-mix(in srgb,var(--gray) 20%,transparent);border-color:var(--gray)}
+.mp-k i.mp-p2{background:color-mix(in srgb,var(--sem-warn) 32%,transparent);border-color:var(--sem-warn)}
+.mp-k i.mp-p3{background:color-mix(in srgb,var(--sem-high) 42%,transparent);border-color:var(--sem-high)}
+.mp-k i.mp-p4{background:color-mix(in srgb,var(--sem-bad) 52%,transparent);border-color:var(--sem-bad)}
+.mp-k i.mp-ruta-k{background:transparent;border:2px dashed var(--sem-bad)}
+.mp-k-n{font:500 9px var(--mp-mono);color:var(--faint);margin-left:auto;line-height:1.4}
+
+/* ================================ TABLA ================================== */
+.mp-tabla-wrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:var(--radius)}
+.mp-tabla{width:100%;border-collapse:collapse;min-width:780px}
+.mp-tabla thead th{font:700 9px var(--mp-mono);letter-spacing:.9px;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:11px 10px;border-bottom:1px solid var(--line-strong);
+  background:var(--panel2);position:sticky;top:0;z-index:1;white-space:nowrap}
+.mp-tabla th.n,.mp-tabla td.n{text-align:right;font-variant-numeric:tabular-nums}
+.mp-tabla th.c,.mp-tabla td.c{text-align:center}
+.mp-tabla td{padding:9px 10px;border-bottom:1px solid var(--hair);vertical-align:middle;
+  font:500 11.5px var(--mp-mono);color:var(--txt)}
+.mp-tabla tbody tr{cursor:pointer;transition:background .15s var(--ease-out)}
+.mp-tabla tbody tr:hover{background:var(--lime-soft)}
+.mp-tabla tbody tr.on{background:var(--lime-soft);box-shadow:inset 2px 0 0 var(--lime)}
+.mp-tabla tbody tr:last-child td{border-bottom:0}
+.mp-pos{font:700 10.5px var(--mp-mono);color:var(--muted);width:34px}
+.mp-coord{font:700 12px var(--mp-mono);letter-spacing:-.2px;white-space:nowrap}
+.mp-tabla td.n b{font:700 13px var(--mp-mono)}
+.mp-rep{font:500 10px var(--mp-mono);color:var(--muted);max-width:280px;line-height:1.45}
+
+.mp-tag{display:inline-block;font:700 9px var(--mp-mono);letter-spacing:.7px;text-transform:uppercase;
+  padding:3px 8px;border-radius:4px;white-space:nowrap;border:1px solid transparent}
+.mp-t-ruta{color:var(--sem-bad-on);background:var(--sem-bad-solid)}
+.mp-t-op{color:var(--muted);border-color:var(--line-strong)}
+
+.mp-maps{font:700 9.5px var(--mp-mono);letter-spacing:.5px;text-transform:uppercase;
+  color:var(--lime-ink);text-decoration:none;border:1px solid var(--line-strong);
+  border-radius:4px;padding:3px 8px;white-space:nowrap}
+.mp-maps:hover{background:var(--lime-soft);border-color:var(--lime-dark)}
+.mp-maps:focus-visible{outline:2px solid var(--lime-dark);outline-offset:1px}
+:root[data-theme="dark"] .mp-maps{color:var(--lime)}
+
+@media (max-width:760px){.mp-k-n{margin-left:0;flex-basis:100%}}
+
+
+/* ====================== v2 — MAPA REAL (Leaflet + OSM) ==================== */
+.mp-head{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:flex-end;justify-content:space-between}
+.mp-head-l{min-width:0;flex:1 1 auto}
+.mp-filtro{display:flex;flex-direction:column;gap:4px}
+.mp-filtro span{font:700 9px var(--mp-mono);letter-spacing:.9px;text-transform:uppercase;color:var(--faint)}
+.mp-filtro span i{font-style:normal;color:var(--lime-ink);border:1px solid var(--line-strong);
+  border-radius:3px;padding:0 4px;margin-left:4px;cursor:help}
+.mp-filtro select{font:700 10.5px var(--mp-mono);letter-spacing:.3px;color:var(--txt);
+  background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;cursor:pointer}
+.mp-bloque-n{margin-left:auto;font:500 9px var(--mp-mono);color:var(--faint);text-transform:none;letter-spacing:.2px}
+
+.mp-leaflet{height:520px;border-radius:var(--radius-sm);overflow:hidden;
+  border:1px solid var(--line-strong);background:var(--panel2)}
+.gx-abierto .mp-leaflet{height:100%;min-height:420px;flex:1 1 auto}
+/* modo oscuro: se invierte el tile de OSM (truco estándar) para no cegar */
+:root[data-theme="dark"] .mp-leaflet .leaflet-tile{
+  filter:invert(1) hue-rotate(180deg) brightness(.86) saturate(.55)}
+:root[data-theme="dark"] .mp-leaflet{border-color:var(--line)}
+
+.leaflet-popup-content-wrapper{background:var(--panel);color:var(--txt);
+  border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);border:1px solid var(--line-strong)}
+.leaflet-popup-tip{background:var(--panel)}
+.mp-pop{display:flex;flex-direction:column;gap:5px;font:500 11px/1.5 var(--mp-mono)}
+.mp-pop b{font:800 13px var(--mp-cond);letter-spacing:.3px;text-transform:uppercase;color:var(--txt)}
+.mp-pop span{color:var(--muted);font-size:10px}
+.mp-pop em{font-style:normal;font-weight:700;font-size:10px;color:var(--muted)}
+.mp-pop em.mp-pop-ruta{color:var(--bad)}
+.mp-pop a{font:700 10px var(--mp-mono);letter-spacing:.4px;text-transform:uppercase;
+  color:var(--lime-ink);text-decoration:none;margin-top:3px}
+.mp-pop a:hover{text-decoration:underline}
+
+.mp-coord small{display:block;font:500 9.5px var(--mp-mono);color:var(--faint);margin-top:1px}
+.mp-ir{border:1px solid var(--line-strong);background:var(--panel);color:var(--lime-ink);
+  font:700 9.5px var(--mp-mono);letter-spacing:.5px;text-transform:uppercase;
+  border-radius:4px;padding:3px 8px;cursor:pointer;white-space:nowrap}
+.mp-ir:hover{background:var(--lime-soft);border-color:var(--lime-dark)}
+:root[data-theme="dark"] .mp-ir,:root[data-theme="dark"] .mp-pop a{color:var(--lime)}
+
+
+/* ============================================================================
+ * ESTADO EN KPIs — lenguaje DASHTRAX, v2 tras crítica del cliente.
+ * El intento anterior (banda lateral + degradado) violaba la regla congelada
+ * "sin franjas laterales; presencia por tamaño y color" y se veía genérico.
+ * La urgencia se dice como ya la dicen los módulos aprobados:
+ *   · la CIFRA grande en el color del semáforo (ya existe)
+ *   · un CHIP sólido tipo "CRÍTICO" — el mismo del gauge de Seguridad
+ *   · en crítico, el chip respira — el mismo pulso del Cerebro Operativo
+ * ========================================================================== */
+.mp-kpi{position:relative}
+.mp-kpi.ok .v{color:var(--tile-ok,var(--ok))}
+.mp-kpi.warn .v{color:var(--tile-warn,var(--warn))}
+.mp-kpi.high .v{color:var(--tile-high,var(--high))}
+.mp-kpi.bad .v{color:var(--tile-bad,var(--bad))}
+/* la etiqueta reserva el hueco del chip: encimados = ilegible */
+.mp-kpi.warn .mp-kpi-top,.mp-kpi.high .mp-kpi-top,.mp-kpi.bad .mp-kpi-top{padding-right:68px}
+.mp-kpi.warn::after,.mp-kpi.high::after,.mp-kpi.bad::after{
+  position:absolute;top:12px;right:12px;
+  font:800 8.5px var(--mono,monospace);letter-spacing:1.2px;
+  padding:3px 7px;border-radius:4px}
+.mp-kpi.warn::after{content:'VIGILAR';color:var(--sem-warn-on);background:var(--sem-warn-solid)}
+.mp-kpi.high::after{content:'ALTO';color:var(--sem-high-on);background:var(--sem-high-solid)}
+.mp-kpi.bad::after{content:'CRÍTICO';color:var(--sem-bad-on);background:var(--sem-bad-solid);
+  animation:mp-resp 2.6s ease-in-out infinite}
+/* pulso por ANILLO, nunca por opacidad: apagar el chip rompía su contraste */
+@keyframes mp-resp{0%,100%{box-shadow:0 0 0 0 transparent}
+  50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--sem-bad) 32%,transparent)}}
+@media (prefers-reduced-motion:reduce){.mp-kpi.bad::after{animation:none}}
+
+/* auditoría: lime-ink 3.46:1 en texto chico → lime-text (5.6:1) */
+.mp-ir,.mp-pop a{color:var(--lime-text)}
+
+/* la etiqueta 'geo' del filtro seguía en lime-ink (2.59 sobre bg) */
+.mp-filtro span i{color:var(--lime-text)}

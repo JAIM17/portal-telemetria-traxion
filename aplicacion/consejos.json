@@ -1,0 +1,334 @@
+{
+  "meta": {
+    "titulo": "Catálogo de consejos operativos — Cerebro Operativo de Conductores TRAXION/LIPU",
+    "descripcion": "Diagnósticos, consecuencias mecánicas y consejos correctivos por tipo de evento de telemetría (Traffilog), niveles de fatiga conforme a la normativa mexicana, códigos DTC SPN/FMI comunes con acción de mantenimiento, y plantillas de retroalimentación para operadores.",
+    "idioma": "es-MX",
+    "generado": "2026-07-23",
+    "fase": "Fase 5 — Deep research (PLAN_MAESTRO §4 Módulo 3 y §5)"
+  },
+
+  "porEvento": {
+    "AcAlto": {
+      "nombre": "Aceleración nivel alto",
+      "diagnostico": "Aceleraciones bruscas y repetidas: el operador pisa a fondo el acelerador desde el arranque o para rebasar, exigiendo el par máximo del motor de golpe.",
+      "consecuencia": "Desgaste acelerado del tren motriz (crucetas, diferencial, flechas), esfuerzo térmico en el embrague, picos de presión en inyectores y turbo, y hasta 10-15% más consumo de combustible. En unidades de pasajeros, además, incomodidad y riesgo para los usuarios.",
+      "consejo": "Acelerar de forma progresiva: pedal a menos de la mitad del recorrido y dejar que la caja suba de marcha temprano (cambio progresivo). Anticipar semáforos y tráfico para no tener que 'recuperar' velocidad con acelerones. Una aceleración suave y gradual puede mejorar el rendimiento de combustible entre 10 y 15%.",
+      "fuentes": ["https://truckstop.com/blog/how-to-improve-trucking-fuel-economy/", "https://www.cameramatics.com/us/resources/braking-bad-the-hidden-costs-of-excessive-speeding-and-harsh-braking/"]
+    },
+    "AcMed": {
+      "nombre": "Aceleración nivel medio",
+      "diagnostico": "Aceleraciones moderadamente agresivas, frecuentes en incorporaciones o al salir de paradas; señal temprana de un estilo de manejo reactivo.",
+      "consecuencia": "Consumo de combustible por encima del óptimo y desgaste gradual de embrague y tren motriz. Si el patrón se repite, evoluciona a eventos de nivel alto.",
+      "consejo": "Practicar la anticipación: mirar 10-15 segundos adelante, planear incorporaciones y mantener distancia de seguimiento para no depender de acelerones. Subir marchas antes de 1,600 rpm.",
+      "fuentes": ["https://en.wikipedia.org/wiki/Progressive_shifting"]
+    },
+    "AcBajo": {
+      "nombre": "Aceleración nivel bajo",
+      "diagnostico": "Aceleraciones ligeramente por encima del umbral suave; dentro de lo esperable en operación urbana con tráfico.",
+      "consecuencia": "Impacto mecánico menor, pero en volumen alto suma consumo de combustible y delata falta de anticipación.",
+      "consejo": "Mantener el buen hábito: si estos eventos son ocasionales y no hay niveles medio/alto, el operador conduce con suavidad. Reforzar la conducción anticipada para reducirlos aún más.",
+      "fuentes": ["https://www.verizonconnect.com/resources/article/fleet-driver-coaching/"]
+    },
+    "FrAlto": {
+      "nombre": "Freno nivel alto",
+      "diagnostico": "Frenadas de pánico o muy bruscas: el operador llega tarde a la decisión de frenar, típicamente por seguir muy de cerca o por exceso de velocidad al aproximarse.",
+      "consecuencia": "Cristalización y desgaste prematuro de balatas y discos/tambores, fatiga de mangueras y componentes neumáticos, corrimiento de carga, y es el predictor número uno de colisión por alcance. Cada frenada de pánico eleva el costo de mantenimiento y el riesgo de siniestro.",
+      "consejo": "Aumentar la distancia de seguimiento a mínimo 4-6 segundos con unidad cargada, reducir velocidad de aproximación a cruces y curvas, y usar el freno de motor en descensos para reservar el freno de servicio a aplicaciones cortas.",
+      "fuentes": ["https://www.cameramatics.com/us/resources/braking-bad-the-hidden-costs-of-excessive-speeding-and-harsh-braking/"]
+    },
+    "FrMed": {
+      "nombre": "Freno nivel medio",
+      "diagnostico": "Frenadas firmes recurrentes; el operador controla la unidad pero deja poco margen y frena tarde con regularidad.",
+      "consecuencia": "Desgaste de balatas por encima del promedio de la flota, mayor temperatura en frenos y consumo extra de combustible (energía cinética desperdiciada).",
+      "consejo": "Trabajar la anticipación: soltar el acelerador antes y dejar que la unidad pierda velocidad en vez de frenar al final. Meta práctica: convertir frenadas medias en desaceleraciones sin freno.",
+      "fuentes": ["https://www.cameramatics.com/us/resources/braking-bad-the-hidden-costs-of-excessive-speeding-and-harsh-braking/"]
+    },
+    "FrBajo": {
+      "nombre": "Freno nivel bajo",
+      "diagnostico": "Frenadas ligeramente por encima del umbral suave; normal en operación urbana o rutas con topes y cruces.",
+      "consecuencia": "Impacto menor; en volumen alto indica manejo reactivo y suma desgaste de balatas.",
+      "consejo": "Buen indicador si domina sobre los niveles medio/alto. Reforzar la lectura del camino y el uso del freno de motor para seguir bajando la carga sobre el freno de servicio.",
+      "fuentes": ["https://www.verizonconnect.com/resources/article/fleet-driver-coaching/"]
+    },
+    "GirAlto": {
+      "nombre": "Giro (der/izq) nivel alto",
+      "diagnostico": "Vueltas tomadas a velocidad excesiva; fuerza lateral alta que indica que el operador no redujo antes de entrar a la curva.",
+      "consecuencia": "Riesgo real de volcadura (crítico en autobuses y unidades con centro de gravedad alto), desgaste irregular de llantas (hombros), esfuerzo en suspensión, terminales de dirección y amortiguadores, y corrimiento de carga o pasajeros de pie.",
+      "consejo": "Frenar ANTES de la curva, nunca dentro de ella: entrar lento y salir acelerando suave. En rampas y entronques, respetar la velocidad señalizada considerando que aplica a autos, no a unidades pesadas cargadas — tomar la curva por debajo de esa señal.",
+      "fuentes": ["https://www.cameramatics.com/us/resources/braking-bad-the-hidden-costs-of-excessive-speeding-and-harsh-braking/"]
+    },
+    "GirMed": {
+      "nombre": "Giro (der/izq) nivel medio",
+      "diagnostico": "Vueltas con fuerza lateral moderada; velocidad de entrada a curva mejorable.",
+      "consecuencia": "Desgaste acelerado de hombros de llantas y componentes de suspensión; incomodidad de pasajeros.",
+      "consejo": "Reducir 5-10 km/h adicionales la velocidad de entrada a curvas y glorietas. Verificar en la ficha del operador si los giros se concentran en un punto de la ruta (posible punto negro geográfico).",
+      "fuentes": ["https://www.gpsinsight.com/blog/driver-scorecards-your-solution-to-better-fleet-training/"]
+    },
+    "GirBajo": {
+      "nombre": "Giro (der/izq) nivel bajo",
+      "diagnostico": "Giros ligeramente por encima del umbral suave; esperable en rutas con muchas vueltas cerradas.",
+      "consecuencia": "Impacto menor sobre llantas y suspensión.",
+      "consejo": "Sin acción urgente. Si el volumen es alto, revisar el trazo de la ruta antes de atribuirlo al operador.",
+      "fuentes": ["https://www.gpsinsight.com/blog/driver-scorecards-your-solution-to-better-fleet-training/"]
+    },
+    "VelAlto": {
+      "nombre": "Velocidad nivel alto en carretera",
+      "diagnostico": "Exceso de velocidad severo en carretera; el operador supera de forma sostenida el límite de la flota/vía.",
+      "consecuencia": "Es el factor que más agrava cualquier siniestro: la distancia de frenado de una unidad pesada crece exponencialmente con la velocidad. Además dispara el consumo (arriba de ~90 km/h cada km/h extra cuesta combustible), sobrecalienta llantas (riesgo de estallido) y expone a multas y responsabilidad legal.",
+      "consejo": "Retroalimentación inmediata y seguimiento semanal: fijar velocidad crucero en 85-90 km/h máximo, planear tiempos de ruta realistas para eliminar la 'necesidad' de correr, y dejar claro que el exceso severo es falta grave de seguridad, no un tema de eficiencia.",
+      "fuentes": ["https://www.cameramatics.com/us/resources/braking-bad-the-hidden-costs-of-excessive-speeding-and-harsh-braking/", "https://truckstop.com/blog/how-to-improve-trucking-fuel-economy/"]
+    },
+    "VelMed": {
+      "nombre": "Velocidad nivel medio en carretera",
+      "diagnostico": "Exceso de velocidad moderado o recurrente por lapsos cortos en carretera.",
+      "consecuencia": "Mayor consumo, mayor desgaste de llantas y frenos, y menor margen de reacción ante imprevistos.",
+      "consejo": "Usar control crucero donde sea posible y revisar la programación de la ruta: si el operador excede para cumplir horarios, el problema es de planeación, no solo de conducta.",
+      "fuentes": ["https://fleetowner.com/running-green/fuel/article/21660208/fuel-economy-101"]
+    },
+    "VelBajo": {
+      "nombre": "Velocidad nivel bajo en carretera",
+      "diagnostico": "Excesos leves y breves, típicos en descensos o rebases.",
+      "consecuencia": "Impacto menor; vigilar que no escale a niveles medio/alto.",
+      "consejo": "Mantener el hábito de verificar velocímetro en descensos y usar freno de motor para no ganar velocidad sin darse cuenta.",
+      "fuentes": ["https://fleetowner.com/running-green/fuel/article/21660208/fuel-economy-101"]
+    },
+    "clutch": {
+      "nombre": "Uso indebido de clutch (arranque con carga alta, clutch pisado >30s detenido, >20s en movimiento)",
+      "diagnostico": "El operador 'descansa' el pie en el pedal, sostiene la unidad en pendiente con el clutch, arranca en marcha alta o mantiene el pedal pisado en paradas largas en vez de poner neutral.",
+      "consecuencia": "Fricción y calor constantes que queman el disco prematuramente; el desgaste avanza al volante de inercia (rectificado o reemplazo), destruye el collarín (release bearing) y estresa la flecha de entrada de la transmisión. Un clutch de unidad pesada es una reparación mayor: transmisión abajo, unidad detenida días y costo de miles de pesos — casi siempre 100% atribuible a hábito de manejo.",
+      "consejo": "Arrancar siempre en la marcha baja correcta (nunca en 2a-3a con carga), pie completamente fuera del pedal salvo al cambiar, en altos poner neutral y soltar el clutch, y en pendiente sostener con freno (o freno de estacionamiento), jamás patinando el clutch.",
+      "fuentes": ["https://www.onsiterepairllc.com/articles/what-causes-clutch-failure-in-diesel-trucks----and-why-it-cant-wait", "https://pointspring.com/blog/tech-tips-12/how-to-extend-the-life-of-your-clutch-in-a-heavy-duty-truck-109", "https://www.tctruckandtrailer.com/articles/avoiding-clutch-burnout-essential-tips-for-diesel-truck-drivers"]
+    },
+    "frenoProlongado": {
+      "nombre": "Freno pisado prolongado (>10s a >30 km/h)",
+      "diagnostico": "El operador baja pendientes 'arrastrando' el freno de servicio de forma continua en lugar de usar freno de motor y marcha baja.",
+      "consecuencia": "Sobrecalentamiento de balatas y tambores/discos (fading): el freno pierde eficacia justo cuando más se necesita — causa clásica de unidades sin frenos en descensos largos. Además cristaliza balatas, deforma tambores y multiplica el gasto en frenos.",
+      "consejo": "En descensos: engranar la misma marcha (o una más baja) que se usaría para subir esa pendiente, activar freno de motor/retardador, y aplicar el freno de servicio solo en aplicaciones cortas y firmes (snub braking), nunca sostenido.",
+      "fuentes": ["https://www.slashgear.com/1647893/what-is-engine-braking-why-prohibited/", "https://legalclarity.org/is-it-illegal-to-coast-downhill-in-neutral/"]
+    },
+    "ralenti": {
+      "nombre": "Ralentí excesivo",
+      "diagnostico": "Motor encendido detenido por periodos largos: esperas, descansos, clima o costumbre de 'calentar' el motor de más.",
+      "consecuencia": "En ralentí el diésel no alcanza su temperatura óptima: combustión incompleta que deja residuos, diluye y contamina el aceite, forma carbonilla en inyectores y EGR/DPF (regeneraciones más frecuentes), y desgasta el motor sin producir un solo kilómetro. Cada hora de ralentí quema ~3-4 litros de diésel y cuesta entre $2.50 y $4.00 USD en combustible y mantenimiento.",
+      "consejo": "Apagar el motor en esperas mayores a 3-5 minutos. Calentamiento: 3-5 minutos bastan en motores modernos; el resto del calentamiento se hace rodando a carga ligera. Medir ralentí como % del tiempo de motor y fijar meta por operador (<10%).",
+      "fuentes": ["https://ecotrackfleetmanagement.com/blog/dangers-of-engine-idling-why-its-bad/", "https://www.centraltowing.com/post/why-idling-can-accelerate-wear-and-tear-understanding-the-hidden-costs", "https://trackobit.com/blog/engine-idling-high-reason-and-solution"]
+    },
+    "neutral": {
+      "nombre": "Conducción en neutral (neutral coasting)",
+      "diagnostico": "El operador desengrana la transmisión en movimiento —típicamente en bajadas— creyendo ahorrar combustible.",
+      "consecuencia": "Se pierde por completo el freno de motor: todo el control recae en el freno de servicio, que se sobrecalienta y puede fallar (unidad desbocada). La unidad gana velocidad sin control, se pierde capacidad de respuesta y en varias jurisdicciones es infracción. El supuesto ahorro es falso: en marcha con pedal suelto el inyector corta combustible (0 consumo), en neutral el motor consume para mantenerse en ralentí.",
+      "consejo": "Prohibición operativa absoluta de bajar en neutral. Descensos siempre engranados con freno de motor. Explicar al operador el dato del corte de inyección: engranado en descenso consume MENOS que en neutral.",
+      "fuentes": ["https://legalclarity.org/is-it-illegal-to-coast-downhill-in-neutral/", "https://www.leaseloco.com/blog/the-potential-fines-and-vehicle-damage-of-coasting-in-neutral", "https://www.motorbiscuit.com/coasting-driving-dangerous-illegal/"]
+    },
+    "rpm": {
+      "nombre": "RPM fuera de banda verde / sobre-revolucionado (high engine speed in low torque)",
+      "diagnostico": "El operador estira las marchas revolucionando el motor fuera de su banda económica (aprox. 1,100-1,500 rpm en diésel pesado) o exige rpm altas con poco par (marcha corta a alta velocidad).",
+      "consecuencia": "Mayor fricción y temperatura interna, desgaste prematuro de pistones, cojinetes y tren de válvulas, esfuerzo extra en el turbo, y consumo muy por encima del óptimo: el motor gira más veces por kilómetro sin producir más trabajo útil.",
+      "consejo": "Cambio progresivo: subir de marcha a no más de ~1,600 rpm y mantener crucero en la banda verde (idealmente 1,250-1,350 rpm); bajar de marcha alrededor de 1,150 rpm. Meta por operador: % de tiempo en banda verde ≥ 85%.",
+      "fuentes": ["https://en.wikipedia.org/wiki/Progressive_shifting", "https://www.truckinginfo.com/articles/gearing-up-for-fuel-economy", "https://fleetowner.com/running-green/fuel/article/21660208/fuel-economy-101"]
+    },
+    "consumo": {
+      "nombre": "Alto consumo de combustible (high fuel consumption drive)",
+      "diagnostico": "Viaje con consumo por encima del esperado; casi siempre es la suma de los demás hábitos: acelerones, velocidad alta, rpm fuera de banda, ralentí y frenado tardío.",
+      "consecuencia": "El combustible es el mayor costo variable de la flota; un operador con malos hábitos puede consumir 10-30% más que uno eficiente en la misma ruta y unidad. También puede delatar problema mecánico (filtros, inyectores, presión de llantas, fugas).",
+      "consejo": "Cruzar este evento con los demás del viaje: si hubo acelerones/rpm/ralentí → coaching de eco-conducción (anticipar, banda verde, crucero 85-90, apagar en esperas). Si el operador conduce bien y aun así consume alto → revisar la unidad (filtros de aire/combustible, presión de llantas, DTC activos).",
+      "fuentes": ["https://truckstop.com/blog/how-to-improve-trucking-fuel-economy/", "https://www.elementfleet.com/insights-and-resources/insights/blogs/your-comprehensive-guide-to-fleet-maintenance-costs"]
+    },
+    "dtc": {
+      "nombre": "Código de falla DTC (SPN/FMI) reportado",
+      "diagnostico": "La unidad reportó un código de diagnóstico J1939: el SPN identifica el componente/parámetro afectado y el FMI el modo de falla (alto, bajo, corto, errático, etc.).",
+      "consecuencia": "Ignorar un DTC activo convierte fallas menores en reparaciones mayores (p. ej. baja presión de aceite ignorada = motor fundido). Un DTC persistente o con testigo MIL encendido implica riesgo de paro en ruta y de daño en cadena al postratamiento (DPF/SCR).",
+      "consejo": "Regla operativa: DTC activo persistente → reportar a mantenimiento con SPN/FMI exactos y no despachar la unidad si el código es de aceite, refrigerante o frenos. Consultar el catálogo dtcComunes para la acción específica. Documentar qué operador manejaba al aparecer el código.",
+      "fuentes": ["https://www.csselectronics.com/pages/j1939-73-dm1-diagnostic-message-dtc", "https://otrperformance.com/blogs/quick-tips/what-are-sa-spn-fmi-beginners-guide-to-fault-codes"]
+    }
+  },
+
+  "fatiga": {
+    "normativa": {
+      "referencia": "NOM-087-SCT-2-2017 (DOF 28/06/2018) y su actualización PROY-NOM-087-SICT-2-2024 (DOF 17/10/2024) — tiempos de conducción y pausas para conductores del autotransporte federal.",
+      "reglas": [
+        "Pausa obligatoria de 30 minutos por cada 5 horas continuas de conducción.",
+        "Máximo 14 horas de conducción acumulada; después, pausa obligatoria mínima de 8 horas continuas.",
+        "Trayectos de más de 5 pero menos de 7 horas: puede omitirse la pausa de 30 min, pero al terminar debe descansarse un mínimo de 4 horas continuas.",
+        "Pasaje y turismo: se requiere segundo conductor cuando la ruta exceda 9 horas de conducción.",
+        "El operador debe portar bitácora de servicio personal e intransferible; la actualización 2024 asigna la verificación a la Guardia Nacional."
+      ],
+      "fuentes": ["https://www.dof.gob.mx/nota_detalle.php?codigo=5529381&fecha=28/06/2018", "https://dof.gob.mx/nota_detalle.php?codigo=5741246&fecha=17/10/2024", "https://gcpmexico.com/la-nom-087-y-el-descanso-de-los-operadores"]
+    },
+    "niveles": [
+      {
+        "nivel": "verde",
+        "umbralDias": 0,
+        "hastaDias": 6,
+        "etiqueta": "Normal (≤6 días consecutivos)",
+        "recomendacion": "Carga de trabajo sana. Mantener al menos un día completo de descanso semanal y vigilar que las horas promedio/día no excedan las pausas de la NOM-087 (30 min por cada 5 h de conducción)."
+      },
+      {
+        "nivel": "amarillo",
+        "umbralDias": 7,
+        "hastaDias": 9,
+        "etiqueta": "Precaución (7-9 días sin descanso)",
+        "recomendacion": "Programar día de descanso dentro de los próximos 2 días. Revisar horas/día del operador: si además promedia jornadas largas, adelantar el descanso. Avisar al coordinador de la UDN."
+      },
+      {
+        "nivel": "naranja",
+        "umbralDias": 10,
+        "hastaDias": 14,
+        "etiqueta": "Riesgo de fatiga (10-14 días sin descanso)",
+        "recomendacion": "Riesgo de fatiga acumulada: la privación de descanso degrada tiempo de reacción y juicio de forma comparable al alcohol. Programar descanso obligatorio inmediato (mínimo 24 h continuas), reasignar rutas y documentar la causa de la racha (falta de personal, picos de demanda)."
+      },
+      {
+        "nivel": "rojo",
+        "umbralDias": 15,
+        "hastaDias": null,
+        "etiqueta": "Crítico (≥15 días sin descanso)",
+        "recomendacion": "Situación crítica e incompatible con una operación segura: retirar al operador de ruta y otorgar descanso inmediato de al menos 48 h. Escalar a gerencia de la UDN; una racha así indica falla de planeación de personal, no del operador. Riesgo legal y de siniestro elevado."
+      }
+    ],
+    "buenasPracticas": [
+      "Los micro-descansos importan: detenerse 15-30 min cada 4-5 horas restaura la atención mucho más que 'aguantar' hasta el destino.",
+      "Las horas de mayor riesgo de fatiga al volante son 00:00-06:00 y 14:00-16:00; evitar programar tramos críticos en esas ventanas cuando sea posible.",
+      "Señales de alerta que el operador debe reportar sin sanción: bostezos constantes, parpadeo pesado, no recordar los últimos kilómetros, invadir carril. Ante cualquiera: detenerse en lugar seguro y descansar 20-30 min.",
+      "La fatiga se acumula: dormir menos de 7 h varias noches seguidas genera una 'deuda de sueño' que una sola noche no repone; por eso el semáforo cuenta días consecutivos y no solo horas del día."
+    ]
+  },
+
+  "dtcComunes": [
+    {
+      "spn": 100,
+      "fmi": 1,
+      "descripcion": "Presión de aceite del motor por debajo del rango normal (nivel crítico).",
+      "accion": "DETENER la unidad de inmediato y apagar motor. Verificar nivel de aceite y fugas; si el nivel es correcto, revisar bomba y sensor de presión antes de volver a arrancar. Operar con este código funde el motor."
+    },
+    {
+      "spn": 100,
+      "fmi": 18,
+      "descripcion": "Presión de aceite moderadamente baja o señal baja del circuito del sensor.",
+      "accion": "Programar revisión inmediata: verificar nivel y viscosidad de aceite, inspeccionar cableado y conector del sensor (corrosión/falso contacto) y probar el sensor contra especificación; reemplazarlo si está fuera de rango."
+    },
+    {
+      "spn": 110,
+      "fmi": 0,
+      "descripcion": "Temperatura de refrigerante del motor por encima del rango crítico (sobrecalentamiento).",
+      "accion": "Detener la unidad en cuanto sea seguro y dejar enfriar. Revisar nivel de refrigerante, fugas, fan clutch/ventilador, termostato y radiador obstruido. No continuar la ruta con temperatura alta sostenida."
+    },
+    {
+      "spn": 110,
+      "fmi": 16,
+      "descripcion": "Temperatura de refrigerante moderadamente alta.",
+      "accion": "Reducir carga (bajar velocidad/marcha) y monitorear. Al llegar: revisar nivel de refrigerante, sensor, termostato y limpieza del radiador/intercooler. Frecuente antes de una falla mayor de enfriamiento."
+    },
+    {
+      "spn": 94,
+      "fmi": 1,
+      "descripcion": "Presión de entrega de combustible por debajo de lo normal.",
+      "accion": "Reemplazar filtro de combustible (causa en la mayoría de los casos) y revisar línea de succión y prefiltro/sedimentador. La baja presión prolongada daña inyectores y bomba de alta presión — no posponer."
+    },
+    {
+      "spn": 111,
+      "fmi": 1,
+      "descripcion": "Nivel de refrigerante bajo.",
+      "accion": "Rellenar con el refrigerante especificado y buscar la fuga (mangueras, bomba de agua, radiador, tapa). Nivel bajo recurrente sin fuga visible puede indicar junta de culata — escalar a diagnóstico."
+    },
+    {
+      "spn": 190,
+      "fmi": 0,
+      "descripcion": "Sobre-revolución del motor (RPM por encima del límite).",
+      "accion": "Evento normalmente causado por el operador (descenso en marcha corta o rebase forzado). Retroalimentar al conductor; si es recurrente en la misma unidad, revisar calibración del limitador. Sobre-rev repetido daña tren de válvulas y turbo."
+    },
+    {
+      "spn": 91,
+      "fmi": 3,
+      "descripcion": "Señal del pedal del acelerador alta/errática (circuito).",
+      "accion": "Revisar conector y cableado del sensor de posición del pedal; limpiar contactos y reemplazar el sensor si la señal sigue errática. Puede provocar aceleraciones irregulares o modo de emergencia (derate)."
+    },
+    {
+      "spn": 168,
+      "fmi": 18,
+      "descripcion": "Voltaje de batería/sistema eléctrico bajo.",
+      "accion": "Probar alternador y estado de baterías, revisar bornes sulfatados y masas. Voltaje bajo sostenido causa fallas fantasma en todos los módulos y deja la unidad tirada."
+    },
+    {
+      "spn": 157,
+      "fmi": 18,
+      "descripcion": "Presión del riel de inyección (common rail) por debajo de lo esperado.",
+      "accion": "Revisar filtros de combustible, bomba de alta presión, válvula reguladora y retorno de inyectores. Suele manifestarse como pérdida de potencia; atender antes de que derive en daño de inyectores."
+    },
+    {
+      "spn": 3226,
+      "fmi": 10,
+      "descripcion": "Sensor de NOx de salida / eficiencia del sistema SCR fuera de rango (postratamiento).",
+      "accion": "Verificar calidad y nivel de urea (DEF), cristalización en el dosificador y estado del sensor de NOx. Ignorarlo lleva a derate progresivo (motor limitado al 25% o 5 mph según normativa del motor)."
+    },
+    {
+      "spn": 3719,
+      "fmi": 16,
+      "descripcion": "Nivel de hollín del DPF alto — regeneración requerida.",
+      "accion": "Realizar regeneración (en ruta o estacionaria) siguiendo el procedimiento del fabricante. Hollín alto recurrente delata exceso de ralentí o ciclos urbanos cortos: cruzar con el hábito de ralentí del operador."
+    },
+    {
+      "spn": 639,
+      "fmi": 2,
+      "descripcion": "Falla de comunicación en el bus J1939 (datos erráticos entre módulos).",
+      "accion": "Revisar arneses, terminales de resistencia y conectores del bus CAN (humedad/corrosión). Un bus intermitente genera lluvia de códigos falsos en cascada: diagnosticar esto ANTES de perseguir otros códigos simultáneos."
+    }
+  ],
+
+  "plantillasFeedback": {
+    "principios": [
+      "Ser específico y con datos: 'el martes tuviste 6 frenados bruscos en la ruta X', nunca un genérico 'maneja con cuidado'. La telemetría es la evidencia neutral, no un instrumento de vigilancia.",
+      "Equilibrar reconocimiento y corrección: si los datos solo se usan para castigar, el programa se percibe como espionaje y los operadores lo rechazan. Reconocer públicamente, corregir en privado.",
+      "Retroalimentar pronto: el coaching cercano al evento (misma semana) corrige hábitos; el trimestral no.",
+      "Enfocar en el hábito y su consecuencia, no en la persona: explicar QUÉ le hace el hábito a la unidad y al propio operador (seguridad, esfuerzo, bono).",
+      "Cerrar siempre con un compromiso concreto y medible para la siguiente semana (1-2 metas, no diez)."
+    ],
+    "felicitacion": {
+      "uso": "Operador con score de seguridad alto (≥85), mejora semana vs semana, o racha sin eventos de nivel alto.",
+      "plantilla": "{OPERADOR}, excelente semana. Tu score de seguridad fue de {SCORE} y llevas {SEMANAS} semana(s) mejorando: {DETALLE_MEJORA} (p. ej. redujiste frenados bruscos de {ANTES} a {DESPUES}). Manejar así cuida tu integridad, la unidad {UNIDAD} y el prestigio de la flota — y se nota en los números. Sigue con la conducción anticipada y el uso del freno de motor: eres referencia para tus compañeros. Gracias por tu profesionalismo.",
+      "canal": "Reconocimiento visible (pizarrón/grupo de la UDN) + mención del coordinador."
+    },
+    "correccion": {
+      "uso": "Operador con score en descenso o concentración de eventos de nivel medio/alto en un hábito específico. Conversación privada.",
+      "plantilla": "{OPERADOR}, revisando tu semana encontramos un punto a trabajar: {EVENTO_PRINCIPAL} ({CANTIDAD} eventos, principalmente en {CONTEXTO}). Esto {CONSECUENCIA_CORTA} — te lo comento porque afecta tu seguridad y tu evaluación, y sabemos que lo puedes corregir. La recomendación concreta es: {CONSEJO_CORTO}. Meta para la próxima semana: bajar de {CANTIDAD} a {META} eventos. Lo revisamos juntos el {FECHA_SEGUIMIENTO}. En lo demás vas bien: {ASPECTO_POSITIVO}.",
+      "canal": "1 a 1 con el coordinador, en privado, con la gráfica de tendencia a la vista."
+    },
+    "urgente": {
+      "uso": "Score <70, evento crítico (exceso severo de velocidad, neutral en descenso, sobre-rev), DTC crítico manejando, o ≥10 días sin descanso.",
+      "plantilla": "{OPERADOR}, necesitamos hablar hoy. Esta semana se registró {SITUACION_CRITICA} en la unidad {UNIDAD}. Esto pone en riesgo tu seguridad y la de terceros, y no es negociable: {REGLA_OPERATIVA}. Plan inmediato: {ACCION_INMEDIATA} (p. ej. reentrenamiento de frenado en descenso / descanso obligatorio de 24 h / unidad a taller por código {DTC}). Habrá seguimiento diario esta semana y revisión el {FECHA_SEGUIMIENTO}. Estamos para apoyarte a corregirlo — pero la seguridad va primero.",
+      "canal": "Reunión inmediata (mismo día) con coordinador; registrar por escrito y programar seguimiento."
+    }
+  },
+
+  "fuentes": [
+    "https://www.dof.gob.mx/nota_detalle.php?codigo=5529381&fecha=28/06/2018 — NOM-087-SCT-2-2017, DOF (tiempos de conducción y pausas, autotransporte federal)",
+    "https://dof.gob.mx/nota_detalle.php?codigo=5741246&fecha=17/10/2024 — PROY-NOM-087-SICT-2-2024, DOF (actualización de la norma)",
+    "https://gcpmexico.com/la-nom-087-y-el-descanso-de-los-operadores — GCP México: interpretación práctica de la NOM-087",
+    "https://transporte.mx/publican-nom-087-sobre-tiempos-de-conduccion/ — Transporte.mx: resumen de la NOM-087",
+    "https://www.tyt.com.mx/nota/sict-publica-proyecto-de-nom-087-guardia-nacional-encargada-de-verificar-tiempos-de-manejo — Revista TyT: verificación por Guardia Nacional (proyecto 2024)",
+    "https://www.onsiterepairllc.com/articles/what-causes-clutch-failure-in-diesel-trucks----and-why-it-cant-wait — Causas de falla de clutch en camiones diésel",
+    "https://pointspring.com/blog/tech-tips-12/how-to-extend-the-life-of-your-clutch-in-a-heavy-duty-truck-109 — Extender vida del clutch en unidades pesadas",
+    "https://www.tctruckandtrailer.com/articles/avoiding-clutch-burnout-essential-tips-for-diesel-truck-drivers — Evitar quemado de clutch: consejos para operadores",
+    "https://ecotrackfleetmanagement.com/blog/dangers-of-engine-idling-why-its-bad/ — Costos y daños del ralentí excesivo en flotas",
+    "https://www.centraltowing.com/post/why-idling-can-accelerate-wear-and-tear-understanding-the-hidden-costs — Desgaste por ralentí: combustión incompleta y contaminación de aceite",
+    "https://trackobit.com/blog/engine-idling-high-reason-and-solution — Causas y soluciones del ralentí alto",
+    "https://www.cameramatics.com/us/resources/braking-bad-the-hidden-costs-of-excessive-speeding-and-harsh-braking/ — Costos ocultos de frenado brusco y exceso de velocidad",
+    "https://www.elementfleet.com/insights-and-resources/insights/blogs/your-comprehensive-guide-to-fleet-maintenance-costs — Element Fleet: comportamiento del conductor y costos de mantenimiento",
+    "https://legalclarity.org/is-it-illegal-to-coast-downhill-in-neutral/ — Riesgos y legalidad del descenso en neutral",
+    "https://www.leaseloco.com/blog/the-potential-fines-and-vehicle-damage-of-coasting-in-neutral — Daños y multas por conducir en neutral",
+    "https://www.slashgear.com/1647893/what-is-engine-braking-why-prohibited/ — Freno de motor: funcionamiento y uso correcto",
+    "https://en.wikipedia.org/wiki/Progressive_shifting — Cambio progresivo (progressive shifting)",
+    "https://www.truckinginfo.com/articles/gearing-up-for-fuel-economy — Heavy Duty Trucking: banda verde de RPM y economía de combustible",
+    "https://fleetowner.com/running-green/fuel/article/21660208/fuel-economy-101 — FleetOwner: fundamentos de economía de combustible",
+    "https://truckstop.com/blog/how-to-improve-trucking-fuel-economy/ — 14 prácticas para mejorar rendimiento de combustible",
+    "https://www.csselectronics.com/pages/j1939-73-dm1-diagnostic-message-dtc — CSS Electronics: J1939-73 DM1, estructura SPN/FMI",
+    "https://otrperformance.com/blogs/quick-tips/what-are-sa-spn-fmi-beginners-guide-to-fault-codes — Guía SA/SPN/FMI para códigos de falla",
+    "https://resources.getclue.com/fault-codes-fixes/what-is-spn-100-fmi-18 — SPN 100 FMI 18: diagnóstico y corrección",
+    "https://www.fridayparts.com/blog/spn-100-fmi-1-code — SPN 100 FMI 1: presión de aceite baja",
+    "https://www.partsonline.work/cummins-insite-fault-codes-list-spn-fmi-troubleshooting-guide/ — Cummins Insite: guía de troubleshooting SPN/FMI",
+    "https://www.gpsinsight.com/blog/driver-scorecards-your-solution-to-better-fleet-training/ — Scorecards de conductores para entrenamiento",
+    "https://gomotive.com/blog/driver-scorecard-guide/ — Motive: guía de scorecards y coaching",
+    "https://www.verizonconnect.com/resources/article/fleet-driver-coaching/ — Verizon Connect: coaching de conductores con telemática",
+    "https://www.safetytrack.com/blog/driver-scorecards-using-data-to-motivate-safer-driving/ — Datos para motivar conducción segura (refuerzo positivo)",
+    "https://www.zonar.com/blog/develop-driver-incentive-program-using-fleet-telematics — Zonar: programas de incentivos con telemática"
+  ]
+}

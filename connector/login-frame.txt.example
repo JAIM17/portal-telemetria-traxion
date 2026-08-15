@@ -1,0 +1,3 @@
+# Pega aquí el frame de login capturado con capture-login.js (una vez).
+# Crudo (URL-encoded) o JSON decodificado; la contraseña puede ir tachada (***),
+# el conector la reinyecta desde .env. Este archivo esta gitignored.

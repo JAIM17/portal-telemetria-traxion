@@ -1,0 +1,82 @@
+/* ============================================================================
+ * ALERTAS DEL MONITOR — estilos (semáforo --sem-*, gris #63666A)
+ * ========================================================================== */
+.al-mod{display:flex;flex-direction:column;gap:16px}
+.al-ic{display:inline-flex;vertical-align:middle}
+.al-ic svg{width:16px;height:16px}
+.al-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.al-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.al-title h2{margin:0;font:900 22px var(--cond,'Roboto Condensed');text-transform:uppercase;letter-spacing:.5px}
+.al-sub{font-size:10.5px;color:var(--muted);letter-spacing:.4px}
+.al-acciones{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.al-chip{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);border-radius:5px;
+  padding:5px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;
+  transition:all .16s var(--ease-out,ease-out)}
+.al-chip:hover{border-color:var(--lime-dark);color:var(--txt)}
+.al-chip.on{background:var(--lime);border-color:var(--lime-dark);color:var(--on-lime);font-weight:700}
+.al-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--lime-dark);background:var(--lime);
+  color:var(--on-lime);border-radius:6px;padding:6px 12px;cursor:pointer;
+  font:700 10.5px var(--mono);letter-spacing:.5px;text-transform:uppercase;
+  transition:all .16s var(--ease-out,ease-out)}
+.al-btn:hover{background:var(--lime-bright,#e3f230);transform:translateY(-1px)}
+.al-btn.ghost{background:var(--panel);color:var(--muted);border-color:var(--line-strong)}
+.al-btn.ghost:hover{color:var(--txt)}
+.al-btn .al-ic svg{width:13px;height:13px}
+
+.al-tops{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.al-top{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius,10px);
+  padding:12px 14px;box-shadow:var(--shadow)}
+.al-top-t{font:800 11px var(--cond,'Roboto Condensed');text-transform:uppercase;letter-spacing:.6px;
+  display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.al-top ol{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:4px;font-size:12px}
+.al-top li{display:flex;gap:8px}
+.al-top li span{flex:1;font-weight:700;font-family:var(--cond,'Roboto Condensed');text-transform:uppercase}
+.al-top li b{color:var(--sem-high,#EE8B36)}
+
+.al-tabla-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius,10px);
+  background:var(--panel);box-shadow:var(--shadow)}
+.al-tabla{width:100%;border-collapse:collapse;min-width:860px;font-size:12px}
+.al-tabla th{font:700 9.5px var(--mono);letter-spacing:.8px;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:10px 12px;border-bottom:1px solid var(--line-strong);background:var(--panel2);
+  position:sticky;top:0;white-space:nowrap}
+.al-tabla td{padding:8px 12px;border-bottom:1px solid var(--hair);vertical-align:middle}
+.al-tipo{display:inline-block;border-radius:4px;padding:3px 8px;font:700 8.5px var(--mono);
+  letter-spacing:.5px;color:#fff}
+.al-tipo.temp{background:var(--sem-bad,#D93F37)}
+.al-tipo.panico{background:var(--sem-high,#EE8B36)}
+.al-ev b{display:block;font-size:11.5px}
+.al-ev small{color:var(--faint);font-size:9px}
+.al-sev{font:700 9px var(--mono);text-transform:uppercase;color:var(--muted)}
+.al-sev.critical,.al-sev.high{color:var(--sem-bad,#D93F37)}
+.al-nota{font-size:9.5px;color:var(--faint)}
+.al-vacio{padding:40px;text-align:center;color:var(--muted);background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius,10px)}
+.al-vacio small{display:block;margin-top:6px;color:var(--faint)}
+.al-vacio-mini{font-size:11px;color:var(--faint)}
+
+/* ── ACORDEÓN POR DÍA (2026-08-08) ────────────────────────────────────────
+   El listado plano crecía sin fin y no se podía situar uno en el tiempo.
+   Cada día es un panel; solo el más reciente arranca abierto. */
+.al-dias-barra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-size:10px;color:var(--muted);letter-spacing:.4px}
+.al-dia-todo{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);
+  border-radius:5px;padding:4px 9px;font:700 9px var(--mono);letter-spacing:.5px;
+  text-transform:uppercase;cursor:pointer;transition:all .16s var(--ease-out,ease-out)}
+.al-dia-todo:hover{border-color:var(--lime-dark);color:var(--txt)}
+.al-dia{border:1px solid var(--line);border-radius:var(--radius,10px);background:var(--panel);
+  box-shadow:var(--shadow);overflow:hidden}
+.al-dia + .al-dia{margin-top:8px}
+.al-dia-h{display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;
+  background:var(--panel2);border:0;border-bottom:1px solid transparent;padding:10px 14px;
+  color:var(--txt);transition:background .16s var(--ease-out,ease-out)}
+.al-dia-h:hover{background:var(--panel)}
+.al-dia.abierto .al-dia-h{border-bottom-color:var(--line-strong)}
+.al-dia-h b{font:800 12px var(--cond,'Roboto Condensed');text-transform:uppercase;letter-spacing:.5px}
+.al-dia-caret{display:inline-block;color:var(--lime-dark);font-size:11px;
+  transition:transform .16s var(--ease-out,ease-out)}
+.al-dia.abierto .al-dia-caret{transform:rotate(90deg)}
+.al-dia-n{margin-left:auto;background:var(--sem-bad,#D93F37);color:#fff;border-radius:20px;
+  padding:2px 9px;font-size:10px;font-weight:700}
+.al-dia-mix{font-size:9.5px;color:var(--faint);min-width:150px;text-align:right}
+.al-dia .al-tabla-wrap{border:0;border-radius:0;box-shadow:none}
+@media (prefers-reduced-motion:reduce){.al-dia-caret{transition:none}}

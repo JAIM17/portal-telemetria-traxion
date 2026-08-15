@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reportes Conductores · Regional (GDL · Colima · L. Cárdenas)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/reportes.css">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
+</head>
+<body>
+<header class="rc-header">
+  <div class="rc-brand">
+    <span class="rc-logo">RC</span>
+    <div>
+      <h1>Reportes Conductores</h1>
+      <p>Traffilog · cuenta regional <strong>RMOccidente</strong> — UDN Guadalajara, Colima y Lázaro Cárdenas</p>
+    </div>
+  </div>
+  <div class="rc-meta">
+    <span class="rc-badge" id="rcRange">—</span>
+    <span class="rc-updated" id="rcUpdated">—</span>
+    <button class="rc-btn rc-btn-ghost" id="rcTheme" title="Cambiar tema">◐</button>
+  </div>
+</header>
+
+<nav class="rc-tabs" role="tablist">
+  <button class="rc-tab on" data-view="trips" role="tab">Resumen de Viajes</button>
+  <button class="rc-tab" data-view="events" role="tab">Resumen de Eventos</button>
+</nav>
+
+<main class="rc-main">
+  <section class="rc-toolbar">
+    <label>Buscar conductor
+      <input type="search" id="fSearch" placeholder="Nombre del conductor…">
+    </label>
+    <label>Grupo
+      <select id="fGrupo"><option value="">Todos</option></select>
+    </label>
+    <label id="fEventoWrap" hidden>Evento
+      <select id="fEvento"><option value="">Todos</option></select>
+    </label>
+    <div class="rc-toolbar-actions">
+      <button class="rc-btn" id="btnImport">Importar Excel/CSV</button>
+      <input type="file" id="fileImport" accept=".xlsx,.xls,.csv" hidden>
+      <button class="rc-btn rc-btn-ghost" id="btnReset" title="Volver a data.json">↺</button>
+    </div>
+  </section>
+
+  <section class="rc-kpis" id="rcKpis"></section>
+
+  <section class="rc-grid">
+    <article class="rc-card rc-card-table">
+      <h2 id="tblTitle">Resumen de Viajes de Conductores</h2>
+      <div class="rc-table-wrap">
+        <table class="rc-table" id="rcTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="rc-empty" id="rcEmpty" hidden>Sin datos para los filtros seleccionados.</p>
+    </article>
+    <article class="rc-card">
+      <h2 id="chartTitle">Top conductores por distancia (km)</h2>
+      <div class="rc-chart" id="rcChart"></div>
+    </article>
+  </section>
+
+  <p class="rc-foot">
+    Fuente: reportes <em>Drivers Trips Summary</em> / <em>Drivers Events Summary</em> de Traffilog.
+    El panel carga <code>data/data.json</code> y acepta las exportaciones Excel/CSV de ambos reportes.
+  </p>
+</main>
+
+<div class="rc-drop" id="rcDrop" hidden><span>Suelta el archivo Excel/CSV aquí</span></div>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

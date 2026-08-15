@@ -1,0 +1,286 @@
+/* ============================================================================
+ * MÓDULO 4 — Rankings & Calificaciones · estilo DASHTRAX (TRAXION/LIPU)
+ * Usa las CSS variables ya definidas en el portal (index.html):
+ * --lime --lime-dark --lime-bright --lime-soft --gray --bg --panel --panel2
+ * --panel-in --line --line-strong --hair --txt --muted --faint
+ * --ok --warn --high --bad --shadow --radius --radius-sm --mono --cond
+ * --ease-out --ease-io   (claro/oscuro automático vía [data-theme])
+ * ========================================================================== */
+
+.m4{display:flex;flex-direction:column;gap:var(--gap-bloque,38px);animation:m4-in .4s var(--ease-out, ease-out)}
+@keyframes m4-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.m4 .mono{font-family:var(--mono)}
+.m4 .num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* --- vacío --- */
+.m4-empty{padding:44px 24px;text-align:center;color:var(--muted);border:1px dashed var(--line-strong);
+  border-radius:var(--radius,10px);font-family:var(--mono);font-size:13px;line-height:2}
+.m4-empty-badge{display:inline-grid;place-items:center;width:34px;height:22px;margin-right:10px;border-radius:4px;
+  background:var(--lime);color:var(--on-lime);font-weight:700;font-size:11px}
+
+/* --- cabecera + tabs --- */
+.m4-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:10px}
+.m4-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.m4-title h2{margin:0;font-family:var(--cond);font-size:21px;font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.m4-num{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--lime-text);
+  border:1px solid var(--lime-dark);border-radius:4px;padding:2px 6px}
+.m4-sub{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px}
+.m4-tabs{display:flex;gap:6px}
+.m4-tab{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);border-radius:6px;
+  padding:7px 14px;font:700 11px var(--mono);letter-spacing:.5px;text-transform:uppercase;cursor:pointer;
+  transition:all .16s var(--ease-out, ease-out)}
+.m4-tab:hover{border-color:var(--lime-dark);color:var(--txt);transform:translateY(-1px)}
+.m4-tab.on{background:var(--lime);border-color:var(--lime-dark);color:var(--on-lime)}
+.m4-body{display:flex;flex-direction:column;gap:var(--gap-bloque,38px)}
+
+/* --- podio mejor/peor --- */
+.m4-podio{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--gap-card,30px);align-items:stretch}
+.m4-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius,10px);
+  padding:var(--pad-card,22px 24px);box-shadow:var(--shadow);position:relative;overflow:hidden;height:100%;
+  transition:transform .16s var(--ease-out, ease-out)}
+.m4-card:hover{transform:translateY(-2px)}
+/* SIN franja lateral. Mejor/peor se leen por el rotulo .m4-card-tag, que ya
+   lo dice con palabras y con su propio color de texto. */
+.m4-card-tag{font-size:9.5px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+.m4-card.best .m4-card-tag{color:var(--ok)}
+.m4-card.worst .m4-card-tag{color:var(--bad)}
+.m4-card-row{display:flex;align-items:center;gap:12px}
+.m4-card-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.m4-card-info strong{font-family:var(--cond);font-size:14.5px;font-weight:900;line-height:1.15;text-transform:uppercase}
+.m4-card-udn{font-size:9.5px;color:var(--faint);letter-spacing:.5px}
+.m4-card-scores{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:11px;font-size:9.5px;color:var(--muted);
+  border-top:1px solid var(--hair);padding-top:var(--sp-3,12px)}
+.m4-card-scores b{color:var(--txt);font-size:11.5px;margin-left:3px}
+.m4-card-empty{display:grid;place-items:center;color:var(--faint)}
+.m4-kpi .m4-kpi-v{font-size:30px;font-weight:700;line-height:1;margin:2px 0 8px}
+.m4-kpi .m4-kpi-v small{font-size:13px;color:var(--faint);font-weight:500}
+.m4-kpi-pct{font-size:10px;color:var(--muted);margin-top:6px}
+
+/* --- gauge SVG --- */
+.m4-gauge{flex-shrink:0}
+.m4-g-bg{fill:none;stroke:var(--line-strong);stroke-width:5;stroke-linecap:round}
+.m4-g-val{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .45s var(--ease-out, ease)}
+.m4-g-val.top{stroke:var(--ok)}
+.m4-g-val.ok{stroke:var(--ok)}
+.m4-g-val.warn{stroke:var(--warn)}
+.m4-g-val.bad{stroke:var(--bad)}
+.m4-g-txt{font:700 13px var(--mono);text-anchor:middle;fill:var(--txt)}
+.m4-g-txt.bad{fill:var(--bad)}
+.m4-g-sub{font:600 5.5px var(--mono);text-anchor:middle;fill:var(--faint);letter-spacing:.6px}
+
+/* --- pesos configurables --- */
+.m4-pesos{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--panel2);
+  border:1px solid var(--line);border-radius:var(--radius-sm,8px);padding:9px 14px}
+.m4-pesos-t{font-size:9.5px;font-weight:700;letter-spacing:1px;color:var(--muted)}
+.m4-pesos label{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);text-transform:uppercase}
+.m4-pesos label b{color:var(--txt);min-width:34px;font-size:11px}
+.m4-pesos input[type=range]{width:96px;accent-color:var(--lime-dark);margin:0;min-height:auto}
+.m4-pesos-reset{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);border-radius:5px;
+  padding:4px 9px;font-size:12px;cursor:pointer;margin-left:auto}
+.m4-pesos-reset:hover{border-color:var(--lime-dark);color:var(--txt)}
+
+/* --- orden --- */
+.m4-orden{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.m4-orden>span{font-size:9.5px;font-weight:700;letter-spacing:1px;color:var(--faint);margin-right:4px}
+.m4-chip{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);border-radius:5px;
+  padding:5px 10px;font-size:10px;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;
+  transition:all .16s var(--ease-out, ease-out)}
+.m4-chip:hover{border-color:var(--lime-dark);color:var(--txt)}
+.m4-chip.on{background:var(--lime);border-color:var(--lime-dark);color:var(--on-lime);font-weight:700}
+
+/* --- tabla ranking --- */
+.m4-tabla-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius,10px);
+  background:var(--panel);box-shadow:var(--shadow)}
+.m4-tabla{width:100%;border-collapse:collapse;min-width:860px;font-size:12.5px}
+.m4-tabla th{font:700 9.5px var(--mono);letter-spacing:.8px;text-transform:uppercase;color:var(--muted);
+  text-align:right;padding:10px 12px;border-bottom:1px solid var(--line-strong);background:var(--panel2);
+  position:sticky;top:0;white-space:nowrap}
+.m4-tabla th:nth-child(1),.m4-tabla th:nth-child(2){text-align:left}
+.m4-tabla td{padding:8px 12px;border-bottom:1px solid var(--hair);vertical-align:middle;white-space:nowrap}
+.m4-tabla tbody tr{transition:background .12s var(--ease-out, ease-out)}
+.m4-tabla tbody tr:hover{background:var(--lime-soft)}
+.m4-tabla tbody tr:first-child .m4-pos{color:var(--lime-dark);font-weight:700}
+.m4-pos{color:var(--faint);font-size:11px}
+.m4-nom strong{display:block;font-family:var(--cond);font-size:13px;font-weight:900;text-transform:uppercase;line-height:1.1}
+.m4-nom span{font-size:9px;color:var(--faint);letter-spacing:.4px}
+.m4-cal{display:inline-block;min-width:38px;text-align:center;border-radius:4px;padding:3px 6px;font-weight:700;font-size:12.5px}
+.m4-cal.top{background:var(--sem-ok-solid,var(--ok));color:var(--sem-ok-on,#fff)}
+.m4-cal.ok{background:var(--sem-ok-solid,var(--ok));color:var(--sem-ok-on,#fff)}
+.m4-cal.warn{background:var(--sem-warn-solid,var(--warn));color:var(--sem-warn-on,#3B2F00)}
+.m4-cal.bad{background:var(--sem-bad-solid,var(--bad));color:var(--sem-bad-on,#fff)}
+.m4-cal.na{color:var(--faint)}
+.m4-rep{display:block;font:700 8px var(--mono);color:var(--bad);letter-spacing:1px;font-style:normal;margin-top:2px}
+.m4-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.m4-dot.ok{background:var(--ok)}
+.m4-dot.warn{background:var(--warn)}
+.m4-dot.high{background:var(--high)}
+.m4-dot.bad{background:var(--bad)}
+.m4-mini{margin-top:3px}
+
+/* --- barras SVG --- */
+.m4-bar{display:block}
+.m4-bar-bg{fill:var(--hair)}
+.m4-bar-fill{transition:width .38s var(--ease-out, ease)}
+.m4-bar-fill.ok{fill:var(--ok)}
+.m4-bar-fill.warn{fill:var(--warn)}
+.m4-bar-fill.bad{fill:var(--bad)}
+
+/* --- vista unidades --- */
+.m4-ukpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.m4-ukpi{background:var(--tile-bg,var(--panel));border:1px solid var(--line);border-radius:var(--radius-sm,8px);padding:11px 13px;
+  display:flex;flex-direction:column;gap:5px;box-shadow:var(--shadow)}
+.m4-ukpi span{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--faint)}
+.m4-ukpi b{font-size:21px;font-weight:700}
+.m4-nota{font-size:9.5px;color:var(--faint);letter-spacing:.4px;margin:0;line-height:1.6}
+.m4-ugrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.m4-unidad{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius,10px);padding:13px;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:9px;
+  transition:transform .16s var(--ease-out, ease-out),border-color .16s var(--ease-out, ease-out)}
+.m4-unidad:hover{transform:translateY(-2px);border-color:var(--lime-dark)}
+.m4-unidad header{display:flex;align-items:center;gap:8px}
+.m4-unidad header>b{font-size:14px;font-weight:700}
+.m4-unidad header>span{font-size:9px;color:var(--faint);letter-spacing:.4px;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m4-dano{font-size:9.5px;font-weight:700;border-radius:4px;padding:3px 7px;letter-spacing:.5px}
+.m4-dano.ok{background:var(--sem-ok-solid,var(--ok));color:var(--sem-ok-on,#fff)}
+.m4-dano.warn{background:var(--sem-warn-solid,var(--warn));color:var(--sem-warn-on,#3B2F00)}
+.m4-dano.bad{background:var(--sem-bad-solid,var(--bad));color:var(--sem-bad-on,#fff)}
+.m4-ustats{font-size:10px;color:var(--muted);letter-spacing:.3px}
+.m4-usems{display:flex;align-items:flex-end;gap:8px;border-top:1px solid var(--hair);padding-top:var(--sp-3,12px)}
+.m4-usem{display:flex;flex-direction:column;align-items:center;gap:2px}
+.m4-usem span{font-size:8.5px;color:var(--faint)}
+.m4-usem b{font-size:13px;font-weight:700}
+.m4-usem b.warn{color:var(--warn)}
+.m4-usem b.bad{color:var(--bad)}
+.m4-usems-t{margin-left:auto;font-size:8px;color:var(--faint);letter-spacing:1px}
+.m4-ucors{display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--hair);padding-top:var(--sp-3,12px)}
+.m4-ucor{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px}
+.m4-ucor>span{font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:capitalize}
+.m4-ucor>b{font-size:10px;min-width:32px;text-align:right}
+
+/* --- vista tendencias --- */
+.m4-tsec h3{margin:2px 0 10px;font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted)}
+.m4-tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.m4-trend{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius,10px);padding:13px;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+.m4-trend header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.m4-trend header b{font-family:var(--cond);font-size:13.5px;font-weight:900;text-transform:uppercase}
+.m4-delta{font-size:11px;font-weight:700}
+.m4-delta small{font-weight:500;color:var(--faint);font-size:8px;letter-spacing:.5px}
+.m4-delta.up{color:var(--ok)}
+.m4-delta.down{color:var(--bad)}
+.m4-delta.flat,.m4-delta.na{color:var(--faint)}
+.m4-trow{display:flex;align-items:center;gap:12px}
+.m4-tscore{display:flex;flex-direction:column;align-items:center;line-height:1}
+.m4-tscore b{font-size:21px;font-weight:700}
+.m4-tscore b.ok{color:var(--ok)}
+.m4-tscore b.warn{color:var(--warn)}
+.m4-tscore b.bad{color:var(--bad)}
+.m4-tscore b.na{color:var(--faint)}
+.m4-tscore span{font-size:8px;color:var(--faint);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.m4-tsems{display:flex;gap:10px;border-top:1px solid var(--hair);padding-top:var(--sp-3,12px)}
+.m4-tsems span{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:8.5px;color:var(--faint);cursor:default}
+.m4-tsems b{font-size:11px;color:var(--txt)}
+.m4-thoras{display:flex;align-items:center;gap:8px}
+.m4-thoras span{font-size:9px;color:var(--faint)}
+
+/* --- sparkline SVG --- */
+.m4-spark{display:block}
+.m4-sp-line{fill:none;stroke:var(--lime-dark);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.m4-sp-dot{fill:var(--lime);stroke:var(--panel);stroke-width:1}
+.m4-sp-ref{stroke:var(--hair);stroke-width:1;stroke-dasharray:3 3}
+
+/* --- responsive --- */
+@media (max-width:720px){
+  .m4-head{flex-direction:column;align-items:stretch}
+  .m4-tabs{width:100%}
+  .m4-tab{flex:1}
+  .m4-pesos{gap:10px}
+  .m4-pesos-reset{margin-left:0}
+}
+
+/* KPI sobre gris TRAXION (#63666A) — legibilidad */
+:root[data-theme="dark"] .m4-ukpi{border-color:rgba(255,255,255,.14)}
+:root[data-theme="dark"] .m4-ukpi b{color:var(--tile-txt,#fff)}
+:root[data-theme="dark"] .m4-ukpi span{color:var(--tile-faint,rgba(255,255,255,.62))}
+
+/* ======================= iconos DASHTRAX (2 tonos) =======================
+ * Paths en aplicacion/iconos.js. Cero emojis, cero iconos de librería. */
+.m4-ic{display:inline-grid;place-items:center;width:16px;height:16px;flex:0 0 16px;
+  margin-right:7px;--ic-accent:var(--lime-ink)}
+.m4-ic svg{width:15px;height:15px;overflow:visible}
+.m4-ic .dash-icon-main{stroke:var(--muted);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.m4-ic .dash-icon-accent{stroke:var(--ic-accent);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.m4-title{display:flex;align-items:center;gap:0}
+.m4-title .m4-ic{width:19px;height:19px;flex:0 0 19px}
+.m4-title .m4-ic svg{width:19px;height:19px}
+.m4-card-tag{display:flex;align-items:center}
+.m4-card.best .m4-ic{--ic-accent:var(--ok)}
+.m4-card.worst .m4-ic{--ic-accent:var(--bad)}
+.m4-tsec h3{display:flex;align-items:center}
+.m4-pesos-reset{display:inline-grid;place-items:center}
+.m4-pesos-reset .m4-ic{margin:0}
+/* alineación: misma altura de card por fila y números tabulares */
+.m4-podio,.m4-ukpis{align-items:stretch}
+.m4-card,.m4-ukpi{height:100%}
+.m4-kpi-v,.m4-tabla .num,.m4-tabla .mono{font-variant-numeric:tabular-nums}
+
+/* ================== TOP 10 PEORES / TOP 10 MEJORES =======================
+ * Petición 3 del cliente. Los dos bloques comparten estructura pero NO
+ * lenguaje visual: el de peores es rojo, denso y explica el motivo; el de
+ * mejores es lima, sobrio y sólo reconoce. Así se distinguen entre sí y del
+ * ranking largo de abajo de un vistazo. */
+.m4-tops{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.m4-top{position:relative;border:1px solid var(--line);border-radius:var(--radius,10px);
+  background:var(--panel);box-shadow:var(--shadow);padding:13px 14px 11px;overflow:hidden}
+/* Sin franja de color superior: la distinción peor/mejor la llevan el color del
+   título, el borde completo de la card y las pastillas numeradas. La barrita
+   superior era decoración cromática por estado (tell de IA), redundante. */
+.m4-top-peor{border-color:var(--bad-edge,var(--line-strong))}
+.m4-top-mejor{border-color:var(--ok-edge)}
+.m4-top h3{display:flex;align-items:center;gap:8px;margin:0 0 9px;
+  font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--txt)}
+.m4-top-peor h3{color:var(--bad)}
+.m4-top-mejor h3{color:var(--ok)}
+.m4-top h3 em{margin-left:auto;font:500 9px/1.4 var(--mono);letter-spacing:.5px;
+  text-transform:uppercase;color:var(--faint);font-style:normal;text-align:right}
+.m4-top-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.m4-top-i{display:flex;align-items:center;gap:10px;padding:6px 2px;
+  border-bottom:1px solid var(--hair)}
+.m4-top-i:last-child{border-bottom:0}
+.m4-top-n{flex:0 0 22px;text-align:center;font-size:10px;font-weight:700;
+  border-radius:4px;padding:2px 0;color:var(--muted);background:var(--panel2)}
+.m4-top-peor .m4-top-n{background:var(--sem-bad-solid,var(--bad));color:var(--sem-bad-on,#fff)}
+.m4-top-mejor .m4-top-n{background:var(--sem-ok-solid,var(--ok));color:var(--sem-ok-on,#fff)}
+.m4-top-nom{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+.m4-top-nom b{font:900 12.5px/1.2 var(--cond);letter-spacing:.3px;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m4-top-nom i{font-style:normal;font-size:9px;letter-spacing:.4px;color:var(--faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m4-top-cal{flex:0 0 auto;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.m4-top-cal.bad{color:var(--bad)} .m4-top-cal.warn{color:var(--warn)}
+.m4-top-cal.ok{color:var(--ok)}   .m4-top-cal.top{color:var(--ok)}
+.m4-top-cal.na{color:var(--faint)}
+
+.m4-orden-nota{margin:0 0 8px;font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--faint)}
+.m4-orden-nota b{color:var(--txt)}
+.m4-dir.on{background:var(--panel2);border-color:var(--lime-dark);color:var(--txt)}
+
+/* ============ GRÁFICA EXPANDIDA A PRIMER PLANO (UIX.graficas) ============ */
+.gx-abierto.m4-tabla-wrap,.gx-abierto.m4-ugrid,.gx-abierto.m4-tsec{overflow:auto}
+.gx-abierto .m4-top-l{flex:1 1 auto}
+
+/* --- chip de bajas ocultas (nunca ocultar en silencio) --- */
+.m4-bajas{margin-left:10px;border:1px solid var(--sem-bad,#D93F37);background:transparent;
+  color:var(--sem-bad-ink,var(--sem-bad,#D93F37));border-radius:5px;padding:4px 9px;
+  font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;
+  transition:all .16s var(--ease-out, ease-out);vertical-align:middle}
+.m4-bajas:hover{background:var(--sem-bad,#D93F37);color:#fff}
+.m4-bajas.on{background:var(--sem-bad,#D93F37);border-color:var(--sem-bad,#D93F37);color:#fff}
+
+/* --- badge multi-UDN (operó en más de una) --- */
+.m4-multiudn{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:4px;
+  font:700 8.5px var(--mono);letter-spacing:.5px;vertical-align:middle;
+  background:var(--sem-high,#EE8B36);color:#fff;cursor:help}
